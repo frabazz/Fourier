@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <inttypes.h>
+#include <vector>
 
 #include "wave.h"
 
@@ -11,50 +12,53 @@ using namespace Chunks;
 
 WaveFile::WaveFile(string filename){
     this -> filename = filename;
+    riffChunk = RIFFChunk();
+    subChunk1 = SubChunk1();
+    subChunk2 = SubChunk2();
+    chunks = vector<GenericSubChunk>();
 }
 
 int WaveFile::open(){
-    char* buffer = new char[4];
-    uint32_t chunkSize;
 
     file = ifstream(filename, ios::binary);
-    if(!file) return 0;
-
-    file.read(buffer, 4);
-    if(string(buffer, 4) != RIFF_NAME) return 0;
-    file.read((char*)&chunkSize, sizeof(uint32_t));
-
-    file.read(buffer, 4);
-    if(string(buffer, 4) != FORMAT_NAME){
-        cout << string(buffer, 4) << endl;
+    if(!file){
+        cout << "error opening in file" << endl;
         return 0;
     }
 
-    string bufferStr;
+    Chunk tmpChunk = Chunk();
+    tmpChunk.readChunkID(&file);
+
+    riffChunk.setChunkID(tmpChunk.chunkID);
+    riffChunk.readChunk(&file);
+    if(!riffChunk.sanityCheck()){
+        cout << "the file is not either riff or wave type" << endl;
+        return 0;
+    }
+
     bool last = false;
 
     chunks = vector<GenericSubChunk>();
 
     while(!last){
-        file.read(buffer, 4);
-        bufferStr = string(buffer, 4);
+        tmpChunk.readChunkID(&file);
 
-        if(bufferStr == SUBCHUNK_NAME_1){
-            subChunk1 = SubChunk1();
+        if(tmpChunk.chunkID == "fmt "){
+            subChunk1.setChunkID(tmpChunk.chunkID);
             subChunk1.readChunk(&file);
         }
-        else if(bufferStr == SUBCHUNK_NAME_2){
-            subChunk2 = SubChunk2();
+        else if(tmpChunk.chunkID == "data"){
+            subChunk2.setChunkID(tmpChunk.chunkID);
             subChunk2.readChunk(&file);
             last = true;
         }
         else{
             GenericSubChunk chunk = GenericSubChunk();
+            chunk.setChunkID(tmpChunk.chunkID);
             chunk.readChunk(&file);
             chunks.push_back(chunk);
         }
     }
-
     return 1;
 }
 
@@ -63,4 +67,7 @@ void WaveFile::printInfo(){
     for(auto chunk : chunks)
         chunk.printChunk();
     subChunk2.printChunk();
+
+    cout << "[GENERAL INFO]" << endl;
+    cout << "no of samples: " << (subChunk2.chunkSize / subChunk1.numChannels) / (subChunk1.bitsPerSample / 8) << endl;
 }

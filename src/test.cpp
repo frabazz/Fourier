@@ -1,5 +1,6 @@
 #include "wave.h"
 #include <iostream>
+#include <string>
 
 using namespace std;
 using namespace Wave;
@@ -16,4 +17,5 @@ int main(int argc, char* argv[]){
         file.printInfo();
     else
         cout << "error opening file" << endl;
+
 }

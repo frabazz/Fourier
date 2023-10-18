@@ -14,6 +14,7 @@ namespace Wave {
         public:
             std::ifstream file;
             std::string filename;
+            Chunks::RIFFChunk riffChunk;
             Chunks::SubChunk1 subChunk1;
             Chunks::SubChunk2 subChunk2;
             std::vector <Chunks::GenericSubChunk> chunks;

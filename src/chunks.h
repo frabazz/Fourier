@@ -1,12 +1,38 @@
+#include <initializer_list>
 #include <inttypes.h>
 #include <fstream>
 #include <string>
 
+#define FORMAT_NAME "WAVE"
+#define RIFF_NAME "RIFF"
+
 namespace Chunks {
 
-    class GenericSubChunk {
+    class Chunk{
         public:
             std::string chunkID;
+
+            void readU32s(std::ifstream* stream, std::initializer_list<uint32_t*> uints);
+            void readU16s(std::ifstream* stream, std::initializer_list<uint16_t*> uints);
+            void readU32(std::ifstream* stream , uint32_t* u);
+            void readU16(std::ifstream* stream , uint16_t* u);
+            std::string readString(std::ifstream* stream, unsigned int size);
+            void readChunkID(std::ifstream* stream);
+            void setChunkID(std::string chunkID);
+    };
+
+    class RIFFChunk : public Chunk{
+        public:
+            uint32_t chunkSize;
+            std::string format;
+
+        void readChunk(std::ifstream* stream);
+        void printChunk();
+        bool sanityCheck();
+    };
+
+    class GenericSubChunk : public Chunk{
+        public:
             uint32_t    chunkSize;
             char*       data;
 
@@ -15,9 +41,8 @@ namespace Chunks {
             ~GenericSubChunk();
     };
 
-    class SubChunk1{
+    class SubChunk1 : public Chunk{
         public:
-            std::string chunkID[4];
             uint32_t    chunkSize;
             uint16_t    audioFormat;
             uint16_t    numChannels;
@@ -32,9 +57,8 @@ namespace Chunks {
     };
 
 
-    class SubChunk2{
+    class SubChunk2 : public Chunk{
         public:
-            std::string chunkID[4];
             uint32_t    chunkSize;
 
             void readChunk(std::ifstream* stream);
