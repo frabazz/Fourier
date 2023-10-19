@@ -43,11 +43,11 @@ int WaveFile::open(){
     while(!last){
         tmpChunk.readChunkID(&file);
 
-        if(tmpChunk.chunkID == "fmt "){
+        if(tmpChunk.chunkID == SUBCHUNK_NAME_1){
             subChunk1.setChunkID(tmpChunk.chunkID);
             subChunk1.readChunk(&file);
         }
-        else if(tmpChunk.chunkID == "data"){
+        else if(tmpChunk.chunkID == SUBCHUNK_NAME_2){
             subChunk2.setChunkID(tmpChunk.chunkID);
             subChunk2.readChunk(&file);
             last = true;
