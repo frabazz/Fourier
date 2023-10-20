@@ -1,5 +1,2 @@
-*.out
-*.o
-*.dat
-*.txt
-build/
+
+build/*
