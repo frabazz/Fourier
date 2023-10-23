@@ -11,7 +11,7 @@
 using namespace std;
 using namespace Wave;
 
-string column1 = "index";
+string column1 = "# index -";
 string column2 = "value";
 
 void initDat(ofstream* out){
@@ -22,7 +22,7 @@ void initDat(ofstream* out){
 
 void printCouple(ofstream* out, double d1, double d2){
     (*out) << fixed << setprecision(FLOAT_PRECISION) << d1;
-    int spaces = column1.length() - FLOAT_PRECISION + SPACES;
+    int spaces = -column1.length() + FLOAT_PRECISION + SPACES;
     for(int i = 0;i < spaces;i++) (*out) << " ";
     (*out) << fixed << setprecision(FLOAT_PRECISION) << d2 << endl;
 }
@@ -37,14 +37,15 @@ int main(int argc, char* argv[]){
     WaveFile file = WaveFile(argv[1]);
     if(file.open()){
         file.printInfo();
-        ofstream output = new ofstream("output.dat", "w");
+        ofstream out;
+        out.open("output.dat");
         cout << "DATA values: " << endl;
         vector<double> sample = vector<double>(file.subChunk1.numChannels);
-
-        for(int i = 0; i < 100; i++){
+        initDat(&out);
+        for(int i = 0; i <1200; i++){
             file >> &sample;
             for(double s : sample)
-                cout << s << endl;
+                printCouple(&out,i, s);
         }
 
     }
