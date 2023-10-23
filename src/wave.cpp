@@ -1,8 +1,10 @@
+#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <inttypes.h>
 #include <vector>
+#include <array>
 
 #include "wave.h"
 
@@ -16,6 +18,7 @@ WaveFile::WaveFile(string filename){
     subChunk1 = SubChunk1();
     subChunk2 = SubChunk2();
     chunks = vector<GenericSubChunk>();
+    sampleSize = -1;
 }
 
 int WaveFile::open(){
@@ -59,8 +62,13 @@ int WaveFile::open(){
             chunks.push_back(chunk);
         }
     }
+
+    sampleSize = subChunk2.chunkSize/ subChunk1.numChannels / (subChunk1.bitsPerSample/8);
+
     return 1;
 }
+
+
 
 void WaveFile::printInfo(){
     subChunk1.printChunk();
@@ -69,5 +77,5 @@ void WaveFile::printInfo(){
     subChunk2.printChunk();
 
     cout << "[GENERAL INFO]" << endl;
-    cout << "no of samples: " << (subChunk2.chunkSize / subChunk1.numChannels) / (subChunk1.bitsPerSample / 8) << endl;
+    cout << "no of samples: " << sampleSize << endl;
 }

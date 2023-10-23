@@ -116,7 +116,8 @@ bool SubChunk1::sanityCheck(){
             byteRate == sampleRate * numChannels * (bitsPerSample / 8) &&
             blockAlign == numChannels * (bitsPerSample / 8) &&
             audioFormat == 1 &&
-            chunkSize == 16
+            chunkSize == 16 &&
+            (bitsPerSample == 8) || (bitsPerSample == 16) || (bitsPerSample == 32)
         );
 }
 
