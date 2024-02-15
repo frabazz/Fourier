@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <ios>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -17,6 +18,10 @@
 namespace Wave {
 
     class WaveFile{
+
+        private:
+            std::ifstream file;
+            std::string filename;
         public:
             int sampleSize;
             Chunks::RIFFChunk riffChunk;
@@ -31,28 +36,25 @@ namespace Wave {
 
             void operator>> (std::vector<double>* arr){
                 for(int i = 0; i < subChunk1.numChannels; i++){
-                    switch(subChunk1.bitsPerSample){
-                        case 8:
-                            int8_t i8;
-                            file.read((char*)&i8, sizeof(int8_t));
-                            (*arr).push_back(((double)i8/MAX_SAMPLE_8));
-                            break;
-                        case 16:
-                            int16_t i16;
-                            file.read((char*)&i16, sizeof(int16_t));
-                            (*arr).push_back(((double)i16/MAX_SAMPLE_16)) ;
-                            break;
-                        case 32:
-                            int32_t i32;
-                            file.read((char*)&i32, sizeof(int32_t));
-                            (*arr).push_back(((double)i32/MAX_SAMPLE_32));
-                            break;
+                    if(subChunk1.bitsPerSample == 8){
+                        uint8_t sample;
+                        file.read((char*)&sample, sizeof(sample));
+                        arr->push_back((double)sample / MAX_SAMPLE_8);
                     }
+
+                    else if(subChunk1.bitsPerSample == 16){
+                        uint16_t sample;
+                        file.read((char*)&sample, sizeof(sample));
+                        arr->push_back((double)sample / MAX_SAMPLE_16);
+                    }
+
+                    else if(subChunk1.bitsPerSample == 32){
+                        uint32_t sample;
+                        file.read((char*)&sample, sizeof(sample));
+                        arr->push_back((double)sample / MAX_SAMPLE_16);
+                    }
+
                 }
             };
-
-        private:
-            std::ifstream file;
-            std::string filename;
     };
 }
