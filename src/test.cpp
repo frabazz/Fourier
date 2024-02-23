@@ -1,11 +1,13 @@
-#include "wave.h"
+#include "complex.h"
 #include <iostream>
 #include <string>
 #include <array>
 #include <iomanip>
 #include <fstream>
 #include <vector>
+using namespace CustomComplex;
 
+/*
 #define FLOAT_PRECISION 4
 #define SPACES 10
 
@@ -25,7 +27,7 @@ int main(int argc, char* argv[]){
     if(file.open()){
         file.printInfo();
         vsample samples = vsample();
-        for(int i = 0; i < 100; ++i){
+        for(int i = 0; i < 150; ++i){
             auto s = vector<double>();
             file >> &s;
             samples.push_back(s);
@@ -35,10 +37,16 @@ int main(int argc, char* argv[]){
 
         for(auto s : samples){
             if(!s.empty())
-
                 cout << s [0] << endl;
         }
     }
     else
         cout << "error opening file" << endl;
+}
+*/
+
+int main(int argc, char* argv[]){
+    Complex c = Complex::fromPhase(4, 3.14/2);
+    std::cout << c;
+
 }

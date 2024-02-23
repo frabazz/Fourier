@@ -37,19 +37,19 @@ namespace Wave {
             void operator>> (std::vector<double>* arr){
                 for(int i = 0; i < subChunk1.numChannels; i++){
                     if(subChunk1.bitsPerSample == 8){
-                        uint8_t sample;
+                        int8_t sample;
                         file.read((char*)&sample, sizeof(sample));
                         arr->push_back((double)sample / MAX_SAMPLE_8);
                     }
 
                     else if(subChunk1.bitsPerSample == 16){
-                        uint16_t sample;
+                        int16_t sample;
                         file.read((char*)&sample, sizeof(sample));
                         arr->push_back((double)sample / MAX_SAMPLE_16);
                     }
 
                     else if(subChunk1.bitsPerSample == 32){
-                        uint32_t sample;
+                        int32_t sample;
                         file.read((char*)&sample, sizeof(sample));
                         arr->push_back((double)sample / MAX_SAMPLE_16);
                     }

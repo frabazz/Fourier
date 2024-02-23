@@ -1,3 +1,6 @@
+#ifndef FCHUNK_H
+#define FCHUNK_H
+
 #include <initializer_list>
 #include <inttypes.h>
 #include <fstream>
@@ -67,3 +70,5 @@ namespace Chunks {
 
 
 }
+
+#endif
