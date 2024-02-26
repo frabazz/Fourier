@@ -8,12 +8,16 @@ namespace CustomComplex {
         public:
             Complex conjugate();
 
-            Complex operator+(Complex& c){
-                return Complex::fromCoord(_real + c.getReal(), _img + c.getImg());
+            Complex operator+(Complex c){
+                return Complex::fromCoord(getReal() + c.getReal(), _img + c.getImg());
             }
 
-            Complex operator-(Complex& c){
-                return Complex::fromCoord(_real + c.getReal(), _img + c.getImg());
+            Complex operator-(Complex c){
+                return Complex::fromCoord(getReal() + c.getReal(), _img + c.getImg());
+            }
+
+            Complex operator*(Complex c){
+                return Complex::fromPhase(getReal() * c.getReal(), getPhase() + c.getPhase());
             }
 
             double getPhase();

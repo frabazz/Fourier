@@ -19,6 +19,7 @@ double Complex::getPhase(){
     _switchToPhase();
     return _phase;
 }
+
 double Complex::getMagnitude() {
     _switchToPhase();
     return _magnitude;
