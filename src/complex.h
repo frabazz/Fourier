@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #ifndef FCOMPLEX_H
 #define FCOMPLEX_H
@@ -9,11 +10,11 @@ namespace CustomComplex {
             Complex conjugate();
 
             Complex operator+(Complex c){
-                return Complex::fromCoord(getReal() + c.getReal(), _img + c.getImg());
+                return Complex::fromCoord(getReal() + c.getReal(), getImg() + c.getImg());
             }
 
             Complex operator-(Complex c){
-                return Complex::fromCoord(getReal() + c.getReal(), _img + c.getImg());
+                return Complex::fromCoord(getReal() + c.getReal(), getImg() + c.getImg());
             }
 
             Complex operator*(Complex c){
@@ -29,7 +30,7 @@ namespace CustomComplex {
             static Complex fromCoord(double real, double img);
             friend std::ostream& operator<<(std::ostream& os, Complex& c)
             {
-                os << "(" << c.getReal() << ", " << c.getImg() << "j)";
+                os << std::setprecision(3) << "(" << c.getReal() << ", " << c.getImg() << "j)";
                 return os;
             }
 
