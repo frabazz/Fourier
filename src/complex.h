@@ -20,7 +20,7 @@ namespace CustomComplex {
             }
 
             Complex operator*(Complex c){
-                return Complex::fromPhase(getReal() * c.getReal(), getPhase() + c.getPhase());
+                return Complex::fromPhase(getMagnitude() * c.getMagnitude(), getPhase() + c.getPhase());
             }
 
             ld getPhase();

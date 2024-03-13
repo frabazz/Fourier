@@ -1,5 +1,5 @@
 #define _USE_MATH_DEFINES
-#define MIN_DOUBLE 0.00000001
+#define MIN_DOUBLE 0.0000000000001
 
 #include <cmath>
 #include <vector>
@@ -24,8 +24,8 @@ std::vector<Complex> Transforms::DFT(std::vector<ld> samples){
         ld real = c.getReal(), img = c.getImg();
 
         res.push_back(Complex::fromCoord(
-            real < MIN_DOUBLE ? 0 : real,
-            img < MIN_DOUBLE ? 0 : img
+            std::abs(real) < MIN_DOUBLE ? 0 : real,
+            std::abs(img) < MIN_DOUBLE ? 0 : img
         ));
     }
 
