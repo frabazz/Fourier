@@ -10,6 +10,8 @@
 #define MIN_OFFSET 0.001
 #define DELTA 0.01
 
+typedef long double ld;
+
 using namespace CustomComplex;
 using namespace std;
 
@@ -20,13 +22,13 @@ double calcFourier(vector<Complex> DFT, double x){
     for(int i = 0; i < DFT.size(); ++i)
         r = r + DFT[i]*Complex::fromPhase(1, (2*M_PI*i*x)/DFT.size());
 
-    return (1.0/DFT.size()) * r.getReal();
+    return (r.getReal()/DFT.size());
 }
 
 void writeDat(std::vector<Complex> DFT, double size){
     ofstream out("output.dat");
     out << "# X - Y" << endl;
-    double x = 0;
+    ld x = 0;
     while(x < size){
         out << " " << x << "   " << calcFourier(DFT, x) << std::endl;
         x += DELTA;
@@ -38,16 +40,12 @@ double function(double x){
 }
 
 int main(int argc, char* argv[]){
-    std::vector<double> v = {1, 2, 3, 4, 3, 2, 1};
-    std::vector<Complex> res = {
-        Complex::fromCoord(10, 0),
-        Complex::fromCoord(-2, 2),
-        Complex::fromCoord(-2, 0),
-        Complex::fromCoord(-2, -2)
-    };
+    std::vector<ld> v = {1, 1, 0, 0};
+    std::vector<Complex> res = Transforms::DFT(v);
     std::cout << "DFT VALUES: " << std::endl;
     for(auto r : res)
         std::cout << r << std::endl;
-    writeDat(res, 10);
+    writeDat(res, 5);
+    std::system("./plot.sh");
     return 0;
 }

@@ -1,4 +1,5 @@
 #define _USE_MATH_DEFINES
+#define MIN_DOUBLE 0.00000001
 
 #include <cmath>
 #include <vector>
@@ -7,20 +8,25 @@
 #include "transforms.h"
 #include "complex.h"
 
+typedef long double ld;
 
 using namespace CustomComplex;
-std::vector<Complex> Transforms::DFT(std::vector<double> samples){
+std::vector<Complex> Transforms::DFT(std::vector<ld> samples){
     int N = samples.size();
     std::vector<Complex> res = std::vector<Complex>();
     for(int k = 0; k < N; ++k){
         Complex c = Complex::fromPhase(0, 0);
         for(int n = 0; n < N; ++n){
-            double exp = -(((2*M_PI*k*n)/N));
+            ld exp = -(((2*M_PI*k*n)/N));
             Complex nth = Complex::fromPhase(samples[n], exp);
             c = c + nth;
         }
+        ld real = c.getReal(), img = c.getImg();
 
-        res.push_back(c);
+        res.push_back(Complex::fromCoord(
+            real < MIN_DOUBLE ? 0 : real,
+            img < MIN_DOUBLE ? 0 : img
+        ));
     }
 
     return res;

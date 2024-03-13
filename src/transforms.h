@@ -3,8 +3,10 @@
 #ifndef FTRANSFORMS
 #define FTRANSFORMS
 
+typedef long double ld;
+
 namespace Transforms{
-    std::vector<CustomComplex::Complex> DFT(std::vector<double>);
+    std::vector<CustomComplex::Complex> DFT(std::vector<ld>);
 }
 
 #endif

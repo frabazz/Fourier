@@ -3,6 +3,8 @@
 #ifndef FCOMPLEX_H
 #define FCOMPLEX_H
 
+typedef long double ld;
+
 namespace CustomComplex {
 
     class Complex{
@@ -21,13 +23,13 @@ namespace CustomComplex {
                 return Complex::fromPhase(getReal() * c.getReal(), getPhase() + c.getPhase());
             }
 
-            double getPhase();
-            double getMagnitude();
-            double getReal();
-            double getImg();
+            ld getPhase();
+            ld getMagnitude();
+            ld getReal();
+            ld getImg();
 
-            static Complex fromPhase(double magnitude, double phase);
-            static Complex fromCoord(double real, double img);
+            static Complex fromPhase(ld magnitude, ld phase);
+            static Complex fromCoord(ld real, ld img);
             friend std::ostream& operator<<(std::ostream& os, Complex& c)
             {
                 os << std::setprecision(3) << "(" << c.getReal() << ", " << c.getImg() << "j)";
@@ -38,15 +40,15 @@ namespace CustomComplex {
         private:
             Complex();
 
-            void _setPhase(double phase);
-            void _setMagnitude(double magnitude);
-            void _setReal(double real);
-            void _setImg(double img);
+            void _setPhase(ld phase);
+            void _setMagnitude(ld magnitude);
+            void _setReal(ld real);
+            void _setImg(ld img);
 
             void _switchToPhase();
             void _switchToCoord();
 
-            double _real, _img, _magnitude, _phase;
+            ld _real, _img, _magnitude, _phase;
             bool _isPhaseDef;
             bool _isCoordDef;
     };

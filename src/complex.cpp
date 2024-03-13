@@ -1,6 +1,8 @@
 #include "complex.h"
 #include <cmath>
 
+typedef long double ld;
+
 using namespace CustomComplex;
 
 
@@ -10,27 +12,27 @@ Complex::Complex(){
 }
 
 
-void Complex::_setPhase(double phase){ _phase = phase; }
-void Complex::_setMagnitude(double magnitude){ _magnitude = magnitude; }
-void Complex::_setReal(double real){ _real = real; }
-void Complex::_setImg(double img){ _img = img; }
+void Complex::_setPhase(ld phase){ _phase = phase; }
+void Complex::_setMagnitude(ld magnitude){ _magnitude = magnitude; }
+void Complex::_setReal(ld real){ _real = real; }
+void Complex::_setImg(ld img){ _img = img; }
 
-double Complex::getPhase(){
+ld Complex::getPhase(){
     _switchToPhase();
     return _phase;
 }
 
-double Complex::getMagnitude() {
+ld Complex::getMagnitude() {
     _switchToPhase();
     return _magnitude;
 }
 
-double Complex::getReal() {
+ld Complex::getReal() {
     _switchToCoord();
     return _real;
 }
 
-double Complex::getImg()  {
+ld Complex::getImg()  {
     _switchToCoord();
     return _img;
 }
@@ -56,7 +58,7 @@ void Complex::_switchToPhase(){
 
 }
 
-Complex Complex::fromCoord(double real, double img){
+Complex Complex::fromCoord(ld real, ld img){
     Complex c = Complex();
     c._real = real;
     c._img = img;
@@ -65,7 +67,7 @@ Complex Complex::fromCoord(double real, double img){
     return c;
 }
 
-Complex Complex::fromPhase(double magnitude, double phase){
+Complex Complex::fromPhase(ld magnitude, ld phase){
     Complex c = Complex();
     c._phase = phase;
     c._magnitude = magnitude;
