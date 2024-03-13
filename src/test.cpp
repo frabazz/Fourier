@@ -8,44 +8,46 @@
 #include <cmath>
 
 #define MIN_OFFSET 0.001
+#define DELTA 0.01
 
 using namespace CustomComplex;
 using namespace std;
 
 
-void writeDat(std::vector<Complex> norms){
+
+double calcFourier(vector<Complex> DFT, double x){
+    Complex r = Complex::fromCoord(0, 0);
+    for(int i = 0; i < DFT.size(); ++i)
+        r = r + DFT[i]*Complex::fromPhase(1, (2*M_PI*i*x)/DFT.size());
+
+    return (1.0/DFT.size()) * r.getReal();
+}
+
+void writeDat(std::vector<Complex> DFT, double size){
     ofstream out("output.dat");
     out << "# X - Y" << endl;
-    for(int i = 0; i < norms.size(); ++i){
-        double sum = 0;
-        for(int j = 0;j < norms.size(); ++j)
-            sum += norms[j].getMagnitude() * cos(2*M_PI*j*i + norms[j].getPhase());
-        out << "  " << i << "   " << sum << endl;
+    double x = 0;
+    while(x < size){
+        out << " " << x << "   " << calcFourier(DFT, x) << std::endl;
+        x += DELTA;
     }
     out.close();
 }
-
 double function(double x){
     return x;
 }
 
 int main(int argc, char* argv[]){
-    std::vector<double> v = std::vector<double>();
-    for(int i = 0;i < 40; i++)
-        v.push_back(function(i));
-    std::vector<Complex> res = Transforms::DFT(v);
-    std::vector<Complex> normalized = std::vector<Complex>();
-
-    for(int i = 0;i < v.size();++i){
-        double img, re;
-        img = std::abs(res[i].getImg()) < MIN_OFFSET ? 0 : res[i].getImg();
-        re = std::abs(res[i].getReal()) < MIN_OFFSET ? 0 : res[i].getReal();
-        Complex p = Complex::fromCoord(re, img);
-        normalized.push_back(Complex::fromPhase(p.getMagnitude()/v.size(), p.getPhase()));
-        //std::cout << p << std::endl;
-        //std::cout << "AMP : " << (p.getMagnitude())/v.size() << " PHASE : " << p.getPhase() << std::endl;
-    }
-
-    writeDat(normalized);
+    std::vector<double> v = {1, 2, 3, 4, 3, 2, 1};
+    std::vector<Complex> res = {
+        Complex::fromCoord(10, 0),
+        Complex::fromCoord(-2, 2),
+        Complex::fromCoord(-2, 0),
+        Complex::fromCoord(-2, -2)
+    };
+    std::cout << "DFT VALUES: " << std::endl;
+    for(auto r : res)
+        std::cout << r << std::endl;
+    writeDat(res, 10);
     return 0;
 }
