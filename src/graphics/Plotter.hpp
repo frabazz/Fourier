@@ -21,6 +21,10 @@ class Plotter : public Component{
         sample_generator _generator;
         std::shared_ptr<dpair> _range;
         std::shared_ptr<sample_data> _sample;
+        double _x_scale, _y_scale;
         SDL_Color *_ax_color, *_f_color;
+
+        double scaleX(double x);
+        double scaleY(double y);
         void componentRender() override;
 };

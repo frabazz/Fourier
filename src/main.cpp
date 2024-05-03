@@ -3,30 +3,35 @@
 #include <SDL_events.h>
 #include <SDL_render.h>
 #include <SDL_video.h>
+#include <cfloat>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <memory>
 #include <vector>
 
-#define WIDTH 500
+#define WIDTH 800
 #define HEIGHT 500
 
 std::shared_ptr<sample_data_t> generator(std::shared_ptr<dpair> range, int max_values){
-    double max_y = 0, min_y = 0;
+    double max_y = -DBL_MAX, min_y = DBL_MAX;
     std::vector<dpair> values = std::vector<dpair>();
     double delta = (range->second - range->first)/static_cast<double>(max_values);
     double curr = range->first;
     for(int i = 0;i < max_values; ++i){
         values.push_back({curr, curr*curr });
+        if(curr*curr < min_y)
+            min_y = curr*curr;
+        if(curr*curr > max_y)
+            max_y = curr*curr;
         curr += delta;
     }
 
     sample_data res = {
         std::make_shared<std::vector<dpair>>(values),
-        min_y,
-        max_y
+        -100*100,
+        100*100
     };
-
+    std::cout << "total values: " << values.size() << std::endl;
     return std::make_shared<sample_data_t>(res);
 }
 
@@ -45,10 +50,11 @@ int main(int argc, char* argv[]){
     SDL_Event e;
     bool quit = false;
 
-    SDL_Rect plotterArea = {100, 100, 200, 200};
-    dpair range = {1,2};
+    SDL_Rect plotterArea = {100, 100, 400, 200};
+    dpair range = {-100, +100};
     SDL_Color red = {255, 0, 0, 255};
-    Plotter p = Plotter(&plotterArea, renderer, generator, std::make_shared<dpair>(range), &red, &red);
+    SDL_Color blue = {0, 255, 255, 255};
+    Plotter p = Plotter(&plotterArea, renderer, generator, std::make_shared<dpair>(range), &red, &blue);
 
     while(!quit){
         if(SDL_PollEvent(&e) > 0)

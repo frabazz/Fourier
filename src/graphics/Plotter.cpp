@@ -1,8 +1,7 @@
 #include "Plotter.hpp"
 #include <SDL2/SDL.h>
-#include <SDL_rect.h>
-#include <SDL_render.h>
 #include <memory>
+#include <iostream>
 
 #define AXIS_WIDTH 3
 
@@ -11,14 +10,31 @@ Plotter::Plotter(SDL_Rect* renderArea, SDL_Renderer* renderer, sample_generator 
 ) : Component(renderArea, renderer)
 {
     _generator = generator;
-    _range = range;
     _ax_color = ax_color;
     _f_color = f_color;
-    _sample = _generator(_range, _renderArea->w);
+
+    //recalc if range is updated
+    _range = range;
+    _sample = _generator(_range, _renderArea->w * 0.50);
+    _x_scale = std::abs(_range->second - _range->first);
+    _y_scale  = std::abs(_sample->max_y - _sample->min_y);
+
 }
 
-void Plotter::componentRender(){
+double Plotter::scaleX(double x){
     //TODO, add logarithmic scale
+    return ((x - _range->first)/(_x_scale) * (_renderArea->w - AXIS_WIDTH)) + AXIS_WIDTH;
+}
+
+double Plotter::scaleY(double y){
+    //TODO, add logarithmic scale
+    std::cout << "min y : " << _sample->min_y << std::endl;
+    return (((1 - (y - _sample->min_y)/(_y_scale)) * (_renderArea->h - AXIS_WIDTH)));
+}
+
+
+void Plotter::componentRender(){
+
 
     //draw axis
     setColor(_ax_color);
@@ -27,8 +43,16 @@ void Plotter::componentRender(){
     fillRect(&x_axis);
     fillRect(&y_axis);
 
-    //draw point by point mode
-    if(_sample->data->size() >= _renderArea->w){
-
+    //draw function
+    setColor(_f_color);
+    for(auto it = _sample->data->begin(); it < _sample->data->end() - 1; ++it){
+        //std::cout << "original x : " << it->first << " scaled x : " << scaleX(it->first) << std::endl;
+        drawLineAA(
+            scaleX(it->first),
+            scaleY(it->second),
+            scaleX((it + 1)->first),
+            scaleY((it + 1)->second),
+            _f_color
+        );
     }
 }

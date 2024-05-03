@@ -1,12 +1,10 @@
-#include <cstddef>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <inttypes.h>
 #include <vector>
-#include <array>
 
-#include "wave.h"
+#include "wave.hpp"
 
 using namespace std;
 using namespace Wave;
@@ -68,8 +66,6 @@ int WaveFile::open(){
     return 1;
 }
 
-
-
 void WaveFile::printInfo(){
     subChunk1.printChunk();
     for(auto chunk : chunks)
@@ -78,4 +74,52 @@ void WaveFile::printInfo(){
 
     cout << "[GENERAL INFO]" << endl;
     cout << "no of samples: " << sampleSize << endl;
+}
+
+
+void WaveFile::readSample(std::vector<double>* arr){
+    for(int i = 0; i < subChunk1.numChannels; i++){
+        if(subChunk1.bitsPerSample == 8){
+            int8_t sample;
+            file.read((char*)&sample, sizeof(sample));
+            arr->push_back((double)sample / MAX_SAMPLE_8);
+        }
+
+        else if(subChunk1.bitsPerSample == 16){
+            int16_t sample;
+            file.read((char*)&sample, sizeof(sample));
+            arr->push_back((double)sample / MAX_SAMPLE_16);
+        }
+
+        else if(subChunk1.bitsPerSample == 32){
+            int32_t sample;
+            file.read((char*)&sample, sizeof(sample));
+            arr->push_back((double)sample / MAX_SAMPLE_16);
+        }
+
+    }
+}
+
+
+void WaveFile::readSample(double* psample){
+    for(int i = 0; i < subChunk1.numChannels; i++){
+        if(subChunk1.bitsPerSample == 8){
+            int8_t sample;
+            file.read((char*)&sample, sizeof(sample));
+            *psample = sample;
+        }
+
+        else if(subChunk1.bitsPerSample == 16){
+            int16_t sample;
+            file.read((char*)&sample, sizeof(sample));
+            *psample = sample;
+        }
+
+        else if(subChunk1.bitsPerSample == 32){
+            int32_t sample;
+            file.read((char*)&sample, sizeof(sample));
+            *psample = sample;
+        }
+
+    }
 }
