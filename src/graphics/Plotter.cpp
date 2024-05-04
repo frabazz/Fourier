@@ -31,7 +31,7 @@ Plotter::Plotter(SDL_Rect* renderArea, SDL_Renderer* renderer, sample_generator 
     _range = range;
     _max_y = 0;
     _min_y = 0;
-    _data = _generator(_range, &_min_y, &_max_y, _renderArea->w * 0.50);
+    _data = _generator(_range, &_min_y, &_max_y, _renderArea->w * 0.5);
     _x_scale = std::abs(_range->second - _range->first);
     _y_scale  = std::abs(_max_y - _min_y);
 

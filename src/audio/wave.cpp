@@ -66,6 +66,7 @@ int WaveFile::open(){
     return 1;
 }
 
+
 void WaveFile::printInfo(){
     subChunk1.printChunk();
     for(auto chunk : chunks)
@@ -106,20 +107,33 @@ void WaveFile::readSample(double* psample){
         if(subChunk1.bitsPerSample == 8){
             int8_t sample;
             file.read((char*)&sample, sizeof(sample));
-            *psample = sample;
+            *psample = (double)sample / MAX_SAMPLE_8;
         }
 
         else if(subChunk1.bitsPerSample == 16){
             int16_t sample;
             file.read((char*)&sample, sizeof(sample));
-            *psample = sample;
+            *psample = (double)sample / MAX_SAMPLE_16;
         }
 
         else if(subChunk1.bitsPerSample == 32){
             int32_t sample;
             file.read((char*)&sample, sizeof(sample));
-            *psample = sample;
+            *psample = (double)sample / MAX_SAMPLE_32;
         }
 
     }
+}
+
+void WaveFile::seek(int samples){
+    if(subChunk1.bitsPerSample == 8)
+        file.seekg(samples * subChunk1.numChannels * sizeof(int8_t));
+    else if(subChunk1.bitsPerSample == 16)
+        file.seekg(samples * subChunk1.numChannels * sizeof(int16_t));
+    else if(subChunk1.bitsPerSample == 32)
+        file.seekg(samples * subChunk1.numChannels * sizeof(int32_t));
+}
+
+void WaveFile::close(){
+    file.close();
 }

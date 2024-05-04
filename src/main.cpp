@@ -1,11 +1,10 @@
 #include "graphics/Plotter.hpp"
-#include <SDL_blendmode.h>
-#include <SDL_render.h>
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <SDL_ttf.h>
 #include <memory>
 #include <vector>
-#include <SDL_ttf.h>
+#include "audio/wave.hpp"
 
 #define WIDTH 800
 #define HEIGHT 500
@@ -23,6 +22,30 @@ std::shared_ptr<std::vector<dpair>> generator(std::shared_ptr<dpair> range, doub
     *min_y = -100*100;
     *max_y = 100*100;
     return std::make_shared<std::vector<dpair>>(values);
+}
+
+std::shared_ptr<std::vector<dpair>> generator2(std::shared_ptr<dpair> range, double* min_y, double* max_y, int npoints){
+    Wave::WaveFile file = Wave::WaveFile("assets/test.wav");
+    if(file.open()){
+        std::vector<dpair> values = std::vector<dpair>();
+        double delta = (range->second - range->first)/static_cast<double>(npoints);
+        for(int i = 0;i < npoints - 1; ++i){
+            double sample = 0.0;
+            file.readSample(&sample);
+            int cast_delta = i * delta;
+            file.seek((i + 1) * delta);
+            values.push_back({cast_delta, sample});
+        }
+
+        *min_y = -1.25;
+        *max_y = 1.25;
+        file.close();
+        return std::make_shared<std::vector<dpair>>(values);
+    }
+    else{
+        std::cout << "error opening file" << std::endl;
+        return NULL;
+    }
 }
 
 int main(int argc, char* argv[]){
@@ -45,10 +68,10 @@ int main(int argc, char* argv[]){
     bool quit = false;
 
     SDL_Rect plotterArea = {100, 100, 400, 200};
-    dpair range = {-100, +100};
+    dpair range = {0, 100000};
     SDL_Color red = {255, 0, 0, 255};
     SDL_Color blue = {0, 255, 255, 255};
-    Plotter p = Plotter(&plotterArea, renderer, generator, std::make_shared<dpair>(range), &red, &blue, "t", "s");
+    Plotter p = Plotter(&plotterArea, renderer, generator2, std::make_shared<dpair>(range), &red, &blue, "t", "s");
 
     while(!quit){
         if(SDL_PollEvent(&e) > 0){

@@ -24,13 +24,13 @@ namespace Wave {
             Chunks::SubChunk1 subChunk1;
             Chunks::SubChunk2 subChunk2;
             std::vector <Chunks::GenericSubChunk> chunks;
-
             WaveFile(std::string filename);
             int open();
             void printInfo();
             bool sanityCheck();
             void readSample(std::vector<double>* sample);
             void readSample(double* sample);
-
+            void seek(int samples);
+            void close();
     };
 }
