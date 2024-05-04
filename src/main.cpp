@@ -1,38 +1,28 @@
 #include "graphics/Plotter.hpp"
-#include <SDL_error.h>
-#include <SDL_events.h>
+#include <SDL_blendmode.h>
 #include <SDL_render.h>
-#include <SDL_video.h>
-#include <cfloat>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <memory>
 #include <vector>
+#include <SDL_ttf.h>
 
 #define WIDTH 800
 #define HEIGHT 500
 
-std::shared_ptr<sample_data_t> generator(std::shared_ptr<dpair> range, int max_values){
-    double max_y = -DBL_MAX, min_y = DBL_MAX;
+std::shared_ptr<std::vector<dpair>> generator(std::shared_ptr<dpair> range, double* min_y, double* max_y, int npoints){
+    //shit code only for testing
     std::vector<dpair> values = std::vector<dpair>();
-    double delta = (range->second - range->first)/static_cast<double>(max_values);
+    double delta = (range->second - range->first)/static_cast<double>(npoints);
     double curr = range->first;
-    for(int i = 0;i < max_values; ++i){
+    for(int i = 0;i < npoints; ++i){
         values.push_back({curr, curr*curr });
-        if(curr*curr < min_y)
-            min_y = curr*curr;
-        if(curr*curr > max_y)
-            max_y = curr*curr;
         curr += delta;
     }
 
-    sample_data res = {
-        std::make_shared<std::vector<dpair>>(values),
-        -100*100,
-        100*100
-    };
-    std::cout << "total values: " << values.size() << std::endl;
-    return std::make_shared<sample_data_t>(res);
+    *min_y = -100*100;
+    *max_y = 100*100;
+    return std::make_shared<std::vector<dpair>>(values);
 }
 
 int main(int argc, char* argv[]){
@@ -46,7 +36,11 @@ int main(int argc, char* argv[]){
     if(window == NULL)
         std::cout << "error during window creation: " << SDL_GetError() << std::endl;
 
+    if(TTF_Init() < 0)
+        std::cout << "error during ttf init " << SDL_GetError() << std::endl;
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
+
     SDL_Event e;
     bool quit = false;
 
@@ -54,12 +48,14 @@ int main(int argc, char* argv[]){
     dpair range = {-100, +100};
     SDL_Color red = {255, 0, 0, 255};
     SDL_Color blue = {0, 255, 255, 255};
-    Plotter p = Plotter(&plotterArea, renderer, generator, std::make_shared<dpair>(range), &red, &blue);
+    Plotter p = Plotter(&plotterArea, renderer, generator, std::make_shared<dpair>(range), &red, &blue, "t", "s");
 
     while(!quit){
-        if(SDL_PollEvent(&e) > 0)
+        if(SDL_PollEvent(&e) > 0){
             if(e.type == SDL_QUIT)
                 quit = true;
+            p.feedEvent(&e);
+        }
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);

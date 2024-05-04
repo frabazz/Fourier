@@ -1,10 +1,16 @@
 #include "Component.hpp"
 #include <SDL2/SDL.h>
 #include <SDL_render.h>
+#include <SDL_ttf.h>
+#include <string>
+#include <iostream>
+
+#define FONT_DIR "./assets/default.ttf"
 
 Component::Component(SDL_Rect* renderArea, SDL_Renderer* renderer){
     _renderer = renderer;
     _renderArea = renderArea;
+    _default_font = TTF_OpenFont(FONT_DIR, 200);
 }
 
 void Component::fillRect(SDL_Rect* rect){
@@ -121,6 +127,21 @@ void Component::drawLineAA(float x0, float y0, float x1, float y1, SDL_Color* co
 
 
     setBrightness(1);
+}
+
+
+void Component::drawToolTip(std::string text, SDL_Rect* area, SDL_Color* bgColor){
+    SDL_Surface* surface = TTF_RenderText_Blended(_default_font, text.c_str(), *bgColor);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
+    if(texture == NULL)
+        std::cout << "texture NULL !!!" << std::endl;
+    if(surface == NULL)
+        std::cout << "surface is NULL !!!!" << std::endl;
+
+    SDL_RenderCopy(_renderer, texture, NULL, area);
+
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
 }
 
 void Component::setColor(SDL_Color* c){
