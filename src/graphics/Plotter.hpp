@@ -3,21 +3,36 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <mutex>
+
+class Plotter;
+
+/*
+** probably shit code, the generator should calculate a function in the given range
+** at n points, and return a vector with values, max_x and max_y (to avoid useless
+** calculations).
+**
+** The callback structure is necessary because the generator might be handled by a
+** thread asynchronously
+ */
 
 typedef std::pair<double, double> dpair;
+typedef void (*sample_generator) (dpair* range, int npoints, Plotter* plotter);
 
-typedef std::shared_ptr<std::vector<dpair>> (*sample_generator) (std::shared_ptr<dpair> range, double* min_y, double* max_y, int npoints);
 
 class Plotter : public Component{
     public:
-        Plotter(SDL_Rect* _renderArea, SDL_Renderer* _renderer, sample_generator, std::shared_ptr<dpair> range, SDL_Color* ax_color, SDL_Color* f_color, std::string x_unit, std::string y_unit);
+        Plotter(SDL_Rect* _renderArea, SDL_Renderer* _renderer, sample_generator, dpair* range, SDL_Color* ax_color, SDL_Color* f_color, std::string x_unit, std::string y_unit);
         void updateRange(std::shared_ptr<dpair> new_range);
         void feedEvent(SDL_Event* e) override;
+        void recalc(double min_x, double min_y, std::vector<dpair>* values);
 
     private:
+        std::mutex vecmutex;
         sample_generator _generator;
-        std::shared_ptr<dpair> _range;
-        std::shared_ptr<std::vector<dpair>> _data;
+        bool _generator_status;
+        dpair* _range;
+        std::vector<dpair>* _data;
         double _min_y, _max_y;
         double _x_scale, _y_scale;
         SDL_Color *_ax_color, *_f_color;
