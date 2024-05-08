@@ -2,9 +2,9 @@
 #include <SDL2/SDL.h>
 #include <SDL_ttf.h>
 #include <vector>
-#include <thread>
-#include <chrono>
+#include <string>
 
+#include "common.hpp"
 #include "graphics/Plotter.hpp"
 #include "audio/wave.hpp"
 
@@ -12,12 +12,10 @@
 #define WIDTH 800
 #define HEIGHT 500
 
-std::vector<std::thread> queue;
 
-void generator2(dpair* range, int npoints, Plotter* plotter);
+void generator2(dpair*, int, vdpair*, double*, double*);
 
 int main(int argc, char* argv[]){
-    queue = std::vector<std::thread>();
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
 
@@ -36,11 +34,17 @@ int main(int argc, char* argv[]){
     SDL_Event e;
     bool quit = false;
 
+    dpair range = {0, 1000};
+    spair units = {"t", "s"};
     SDL_Rect plotterArea = {100, 100, 400, 200};
-    dpair range = {0, 100000};
     SDL_Color red = {255, 0, 0, 255};
     SDL_Color blue = {0, 255, 255, 255};
-    Plotter p = Plotter(&plotterArea, renderer, generator2, &range, &red, &blue, "t", "s");
+    SDL_Color black = {0, 0, 0, 255};
+
+    color_theme_t theme = {blue, red, black};
+
+
+    Plotter p = Plotter(&plotterArea, renderer, generator2, &range, &theme, &units);
 
     while(!quit){
         if(SDL_PollEvent(&e) > 0){
@@ -62,38 +66,26 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-void callRecalc(std::vector<dpair>* values, Plotter* plotter){
-    std::cout << "(callRecalc)called thread id: " << std::this_thread::get_id() << std::endl;
-    //std::cout << (values == NULL) << " " << (plotter == NULL) << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    plotter->recalc(-1.1, +1.1, values);
-}
 
-
-void generator2(dpair* range, int npoints, Plotter* plotter){
-    Wave::WaveFile file = Wave::WaveFile("assets/test.wav");
+void generator2(dpair* range, int npoints, vdpair* data, double* min_y, double * max_y){
+    Wave::WaveFile file = Wave::WaveFile("../assets/sin.wav");
 
     if(file.open()){
-        std::vector<dpair>* values = new std::vector<dpair>();
 
         double delta = (range->second - range->first)/static_cast<double>(npoints);
-        double min_y, max_y;
 
         for(int i = 0;i < npoints - 1; ++i){
             double sample = 0.0;
             file.readSample(&sample);
             int cast_delta = i * delta;
             file.seek((i + 1) * delta);
-            values->push_back({cast_delta, sample});
+            data->push_back({cast_delta, sample});
         }
 
-        min_y = -1.25;
-        max_y = 1.25;
+        *min_y = -1.25;
+        *max_y = 1.25;
         file.close();
 
-        std::cout << "(main)calling thread id: " << std::this_thread::get_id() << std::endl;
-        std::thread t1(callRecalc, values, plotter);
-        t1.detach();
     }
     else
         std::cout << "error opening file" << std::endl;

@@ -40,14 +40,14 @@ inline double rfpart(double x){
     return 1 - fpart(x);
 }
 
-void Component::drawLineAA(float x0, float y0, float x1, float y1, SDL_Color* color) {
+void Component::drawLineAA(float x0, float y0, float x1, float y1, SDL_Color color) {
 
     auto fpart = [](double x) { return x - std::floor(x); };
 
     auto rfpart = [&fpart](double x) { return 1 - fpart(x); };
 
     auto setBrightness = [this, &color](double c){
-        SDL_SetRenderDrawColor(this->_renderer, c*color->r, c*color->g, c*color->b, color->a);
+        SDL_SetRenderDrawColor(this->_renderer, c*color.r, c*color.g, c*color.b, color.a);
     };
 
     bool steep = std::abs(y1 - y0) > std::abs(x1 - x0);
@@ -130,8 +130,8 @@ void Component::drawLineAA(float x0, float y0, float x1, float y1, SDL_Color* co
 }
 
 
-void Component::drawToolTip(std::string text, SDL_Rect* area, SDL_Color* bgColor){
-    SDL_Surface* surface = TTF_RenderText_Blended(_default_font, text.c_str(), *bgColor);
+void Component::drawToolTip(std::string text, SDL_Rect* area, SDL_Color bgColor){
+    SDL_Surface* surface = TTF_RenderText_Blended(_default_font, text.c_str(), bgColor);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
     if(texture == NULL)
         std::cout << "texture NULL !!!" << std::endl;
@@ -144,8 +144,8 @@ void Component::drawToolTip(std::string text, SDL_Rect* area, SDL_Color* bgColor
     SDL_DestroyTexture(texture);
 }
 
-void Component::setColor(SDL_Color* c){
-    SDL_SetRenderDrawColor(_renderer, c->r, c->g, c->b, c->a);
+void Component::setColor(SDL_Color c){
+    SDL_SetRenderDrawColor(_renderer, c.r, c.g, c.b, c.a);
 }
 
 void Component::render(){

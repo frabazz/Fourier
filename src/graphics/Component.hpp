@@ -19,9 +19,9 @@ class Component {
         void drawRect(SDL_Rect* rect);
         void drawLine(float x1, float y1, float x2, float y2);
         void drawPoint(float x, float y);
-        void drawLineAA(float x1, float y1, float x2, float y2, SDL_Color* color);
-        void setColor(SDL_Color* c);
-        void drawToolTip(std::string text, SDL_Rect* area, SDL_Color* bgcolor);
+        void drawLineAA(float x1, float y1, float x2, float y2, SDL_Color color);
+        void setColor(SDL_Color c);
+        void drawToolTip(std::string text, SDL_Rect* area, SDL_Color bgcolor);
 
         //implemented specifically by components
         virtual void componentRender() = 0;

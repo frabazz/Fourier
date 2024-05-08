@@ -1,9 +1,9 @@
+#ifndef PLOTTER_COMPONENT_H
+#define PLOTTER_COMPONENT_H
+
 #include "Component.hpp"
 #include <SDL2/SDL.h>
-#include <memory>
-#include <vector>
-#include <string>
-#include <mutex>
+#include "common.hpp"
 
 class Plotter;
 
@@ -12,34 +12,28 @@ class Plotter;
 ** at n points, and return a vector with values, max_x and max_y (to avoid useless
 ** calculations).
 **
-** The callback structure is necessary because the generator might be handled by a
-** thread asynchronously
- */
-
-typedef std::pair<double, double> dpair;
-typedef void (*sample_generator) (dpair* range, int npoints, Plotter* plotter);
+** The callback structure
+*/
 
 
 class Plotter : public Component{
     public:
-        Plotter(SDL_Rect* _renderArea, SDL_Renderer* _renderer, sample_generator, dpair* range, SDL_Color* ax_color, SDL_Color* f_color, std::string x_unit, std::string y_unit);
-        void updateRange(std::shared_ptr<dpair> new_range);
+        Plotter(SDL_Rect* _renderArea, SDL_Renderer* _renderer, sample_generator, dpair* range, color_theme_t* theme , spair* units);
+        void updateRange(dpair* new_range);
         void feedEvent(SDL_Event* e) override;
-        void recalc(double min_x, double min_y, std::vector<dpair>* values);
-
     private:
-        std::mutex vecmutex;
         sample_generator _generator;
-        bool _generator_status;
         dpair* _range;
-        std::vector<dpair>* _data;
+        std::vector<dpair> _data;
         double _min_y, _max_y;
         double _x_scale, _y_scale;
-        SDL_Color *_ax_color, *_f_color;
+        color_theme_t* _theme;
         bool _is_mouse_over;
         int _mouse_x, _mouse_y;
-        std::string _x_unit, _y_unit;
+        spair* _units;
         double scaleX(double x);
         double scaleY(double y);
         void componentRender() override;
 };
+
+#endif
