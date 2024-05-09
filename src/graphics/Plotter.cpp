@@ -70,6 +70,27 @@ void Plotter::zoom(double ratio){
 
 }
 
+void Plotter::shift(double ratio){
+    _data.clear();
+    double adj_ratio = (_range->second - _range->first) * ratio;
+
+    *_range = {_range->first + adj_ratio, _range->second + adj_ratio};
+
+    generator_data gen_data = {
+        _range,
+        &_min_y,
+        &_max_y,
+        (int)(_renderArea->w * 1),
+        &_data
+    };
+
+    _generator(gen_data);
+    _x_scale = std::abs(_range->second - _range->first);
+    _y_scale  = std::abs(_max_y - _min_y);
+
+}
+
+
 double Plotter::scaleX(double x){
     //TODO, add logarithmic scale
     return ((x - _range->first)/(_x_scale) * (_renderArea->w - AXIS_WIDTH)) + AXIS_WIDTH;
@@ -123,10 +144,21 @@ void Plotter::componentRender(){
     }
 
 
-    if(_key_pressed == SDLK_PLUS)
-        zoom(+0.10);
-    if(_key_pressed == SDLK_MINUS)
-        zoom(-0.10);
+    switch(_key_pressed){
+        case SDLK_RIGHT:
+            shift(0.1);
+            break;
+        case SDLK_LEFT:
+            shift(-0.1);
+            break;
+        case SDLK_PLUS:
+            zoom(0.1);
+            break;
+        case SDLK_MINUS:
+            zoom(-0.1);
+            break;
+    }
+
     _key_pressed = SDLK_CLEAR;
 }
 

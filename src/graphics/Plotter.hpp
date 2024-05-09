@@ -32,6 +32,7 @@ class Plotter : public Component{
         double scaleY(double y);
         void componentRender() override;
         void zoom(double ratio);
+        void shift(double ratio);
 };
 
 #endif

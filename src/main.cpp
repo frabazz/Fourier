@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     bool quit = false;
 
     dpair range = {0, 5000};
-    spair units = {"t", "s"};
+    spair units = {"sample", "dB"};
     SDL_Rect plotterArea = {100, 100, 400, 200};
     SDL_Color red = {255, 0, 0, 255};
     SDL_Color blue = {0, 255, 255, 255};
@@ -78,18 +78,22 @@ void generator2(generator_data data){
     Wave::WaveFile file = Wave::WaveFile("../assets/sin.wav");
 
     if(file.open()){
-        //std::cout << "calulcating on range: " << data.range->first << " " << data.range->second << std::endl;
         double delta = (data.range->second - data.range->first)/static_cast<double>(data.npoints);
-        /*
-        file.seek()
-        for(int i = 0;i < data.npoints - 1; ++i){
-            double sample = 0.0;
-            file.readSample(&sample);
-            int cast_delta = i * delta;
-            file.seek((i + 1) * delta);
-            data.data->push_back({cast_delta, sample});
+
+        if(data.range->first < 0){
+            data.range->second += std::abs(data.range->first);
+            data.range->first = 0;
+            if(data.range->second > file.sampleSize)
+                data.range->second = file.sampleSize;
         }
-        */
+
+        if(data.range->second > file.sampleSize){
+            data.range->first -= (data.range->second - file.sampleSize);
+            data.range->second = file.sampleSize;
+            if(data.range->first < 0)
+                data.range->first = 0;
+        }
+        std::cout << "calulcating on range: " << data.range->first << " " << data.range->second << std::endl;
 
         file.seek(data.range->first);
         for(int i = 0; i < data.npoints - 1; ++i){
@@ -97,7 +101,7 @@ void generator2(generator_data data){
             file.readSample(&sample);
             int cast_delta = i * delta;
             file.seek(data.range->first +  (i + 1)*delta);
-            data.data->push_back({data.range->first + cast_delta, sample});
+            data.data->push_back({(int)data.range->first + cast_delta, sample});
         }
 
         *data.min_y = -1.25;
