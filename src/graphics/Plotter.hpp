@@ -1,24 +1,18 @@
 #ifndef PLOTTER_COMPONENT_H
 #define PLOTTER_COMPONENT_H
 
-#include "Component.hpp"
 #include <SDL2/SDL.h>
+#include <chrono>
+
+#include "Component.hpp"
 #include "common.hpp"
 
 class Plotter;
 
-/*
-** probably shit code, the generator should calculate a function in the given range
-** at n points, and return a vector with values, max_x and max_y (to avoid useless
-** calculations).
-**
-** The callback structure
-*/
-
 
 class Plotter : public Component{
     public:
-        Plotter(SDL_Rect* _renderArea, SDL_Renderer* _renderer, sample_generator, dpair* range, color_theme_t* theme , spair* units);
+        Plotter(SDL_Rect* _renderArea, SDL_Renderer* _renderer, PlotterConfig config);
         void updateRange(dpair* new_range);
         void feedEvent(SDL_Event* e) override;
     private:
@@ -27,13 +21,17 @@ class Plotter : public Component{
         std::vector<dpair> _data;
         double _min_y, _max_y;
         double _x_scale, _y_scale;
-        color_theme_t* _theme;
+        color_theme* _theme;
         bool _is_mouse_over;
         int _mouse_x, _mouse_y;
+        SDL_Keycode _key_pressed;
         spair* _units;
+        decltype(std::chrono::system_clock::now()) _last_key_poll;
+
         double scaleX(double x);
         double scaleY(double y);
         void componentRender() override;
+        void zoom(double ratio);
 };
 
 #endif

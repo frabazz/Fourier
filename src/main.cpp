@@ -13,7 +13,7 @@
 #define HEIGHT 500
 
 
-void generator2(dpair*, int, vdpair*, double*, double*);
+void generator2(generator_data data);
 
 int main(int argc, char* argv[]){
     SDL_Window* window = NULL;
@@ -34,17 +34,24 @@ int main(int argc, char* argv[]){
     SDL_Event e;
     bool quit = false;
 
-    dpair range = {0, 1000};
+    dpair range = {0, 5000};
     spair units = {"t", "s"};
     SDL_Rect plotterArea = {100, 100, 400, 200};
     SDL_Color red = {255, 0, 0, 255};
     SDL_Color blue = {0, 255, 255, 255};
     SDL_Color black = {0, 0, 0, 255};
 
-    color_theme_t theme = {blue, red, black};
+    color_theme theme = {blue, red, black};
+
+    PlotterConfig Plotconf ={
+        generator2,
+        &range,
+        &units,
+        &theme
+    };
 
 
-    Plotter p = Plotter(&plotterArea, renderer, generator2, &range, &theme, &units);
+    Plotter p = Plotter(&plotterArea, renderer, Plotconf);
 
     while(!quit){
         if(SDL_PollEvent(&e) > 0){
@@ -67,25 +74,36 @@ int main(int argc, char* argv[]){
 }
 
 
-void generator2(dpair* range, int npoints, vdpair* data, double* min_y, double * max_y){
+void generator2(generator_data data){
     Wave::WaveFile file = Wave::WaveFile("../assets/sin.wav");
 
     if(file.open()){
-
-        double delta = (range->second - range->first)/static_cast<double>(npoints);
-
-        for(int i = 0;i < npoints - 1; ++i){
+        //std::cout << "calulcating on range: " << data.range->first << " " << data.range->second << std::endl;
+        double delta = (data.range->second - data.range->first)/static_cast<double>(data.npoints);
+        /*
+        file.seek()
+        for(int i = 0;i < data.npoints - 1; ++i){
             double sample = 0.0;
             file.readSample(&sample);
             int cast_delta = i * delta;
             file.seek((i + 1) * delta);
-            data->push_back({cast_delta, sample});
+            data.data->push_back({cast_delta, sample});
+        }
+        */
+
+        file.seek(data.range->first);
+        for(int i = 0; i < data.npoints - 1; ++i){
+            double sample = 0.0;
+            file.readSample(&sample);
+            int cast_delta = i * delta;
+            file.seek(data.range->first +  (i + 1)*delta);
+            data.data->push_back({data.range->first + cast_delta, sample});
         }
 
-        *min_y = -1.25;
-        *max_y = 1.25;
+        *data.min_y = -1.25;
+        *data.max_y = 1.25;
         file.close();
-
+        //std::cout << "gen vec of size " << data.data->size() << std::endl;
     }
     else
         std::cout << "error opening file" << std::endl;

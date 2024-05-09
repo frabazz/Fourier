@@ -1,39 +1,72 @@
-#include <SDL2/SDL.h>
+#include <SDL_events.h>
+#include <SDL_keycode.h>
+#include <chrono>
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <chrono>
 
-#include "Plotter.hpp"
 #include "common.hpp"
+#include "Plotter.hpp"
 
 #define AXIS_WIDTH 3
 #define CROSS_SIZE 10
 
-Plotter::Plotter(SDL_Rect* renderArea, SDL_Renderer* renderer,
-                 sample_generator generator,
-                 dpair* range, color_theme_t* theme,
-                 spair* units
-) : Component(renderArea, renderer)
+
+
+Plotter::Plotter(SDL_Rect* renderArea, SDL_Renderer* renderer,  PlotterConfig config) : Component(renderArea, renderer)
 {
-    _generator = generator;
-    _units = units;
-    _theme = theme;
+
+    _generator = config.generator;
+    _units = config.units;
+    _theme = config.theme;
 
     _is_mouse_over = false;
     _mouse_x = 0;
     _mouse_y = 0;
-
-    _range = range;
+    _key_pressed = SDLK_CLEAR;
+    _range = config.range;
     _max_y = 0;
     _min_y = 0;
 
+    _last_key_poll = std::chrono::system_clock::now();
+
     _data = std::vector<dpair>();
-    _generator(_range, 0.5 * _renderArea->w, &_data, &_min_y, &_max_y);
+
+    generator_data gen_data = {
+        _range,
+        &_min_y,
+        &_max_y,
+        (int)(0.8 * _renderArea->w),
+        &_data
+    };
+
+    _generator(gen_data);
 
     _x_scale = std::abs(_range->second - _range->first);
     _y_scale  = std::abs(_max_y - _min_y);
 
+
+}
+
+void Plotter::zoom(double ratio){
+    _data.clear();
+    double adj_ratio = (_range->second - _range->first) * ratio;
+
+    *_range = {_range->first + adj_ratio, _range->second - adj_ratio};
+
+    generator_data gen_data = {
+        _range,
+        &_min_y,
+        &_max_y,
+        (int)(_renderArea->w * 1),
+        &_data
+    };
+
+    _generator(gen_data);
+    _x_scale = std::abs(_range->second - _range->first);
+    _y_scale  = std::abs(_max_y - _min_y);
 
 }
 
@@ -86,8 +119,15 @@ void Plotter::componentRender(){
         int index = std::floor(index_percentage * static_cast<double>(_data.size() - 1));
         std::string text = doubleToString(_data[index].first, 2) + " " + _units->first + ", " + doubleToString(_data[index].second, 2) + " " + _units->second;
         drawToolTip(text, &area, _theme->primary_color);
+
     }
 
+
+    if(_key_pressed == SDLK_PLUS)
+        zoom(+0.10);
+    if(_key_pressed == SDLK_MINUS)
+        zoom(-0.10);
+    _key_pressed = SDLK_CLEAR;
 }
 
 void Plotter::feedEvent(SDL_Event* e){
@@ -98,7 +138,19 @@ void Plotter::feedEvent(SDL_Event* e){
         if(_mouse_x > _renderArea->x + AXIS_WIDTH && _mouse_x < _renderArea->x + _renderArea->w &&
           _mouse_y > _renderArea->y && _mouse_y < _renderArea->y + _renderArea->h - AXIS_WIDTH
         ) _is_mouse_over = true;
-
         else _is_mouse_over = false;
+    }
+
+    auto now = std::chrono::system_clock::now();
+    auto time_passed = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_key_poll);
+
+    _key_pressed = SDLK_CLEAR;
+
+    if(time_passed.count() > 50 || true){
+        if(e->type == SDL_KEYDOWN){
+            _key_pressed = e->key.keysym.sym;
+            _last_key_poll = now;
+    }
+
     }
 }
