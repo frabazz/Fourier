@@ -5,20 +5,19 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <chrono>
 
 #include "common.hpp"
 #include "Plotter.hpp"
 
 #define AXIS_WIDTH 3
 #define CROSS_SIZE 10
-
+#define WTOP_RATIO 0.8
 
 
 Plotter::Plotter(SDL_Rect* renderArea, SDL_Renderer* renderer,  PlotterConfig config) : Component(renderArea, renderer)
 {
 
-    _generator = config.generator;
+    _worker = config.worker;
     _units = config.units;
     _theme = config.theme;
 
@@ -30,19 +29,18 @@ Plotter::Plotter(SDL_Rect* renderArea, SDL_Renderer* renderer,  PlotterConfig co
     _max_y = 0;
     _min_y = 0;
 
-    _last_key_poll = std::chrono::system_clock::now();
-
     _data = std::vector<dpair>();
 
-    generator_data gen_data = {
+
+    worker_params params = {
         _range,
         &_min_y,
         &_max_y,
-        (int)(0.8 * _renderArea->w),
+        (int)(WTOP_RATIO * _renderArea->w),
         &_data
     };
 
-    _generator(gen_data);
+    _worker->run(params);
 
     _x_scale = std::abs(_range->second - _range->first);
     _y_scale  = std::abs(_max_y - _min_y);
@@ -51,40 +49,49 @@ Plotter::Plotter(SDL_Rect* renderArea, SDL_Renderer* renderer,  PlotterConfig co
 }
 
 void Plotter::zoom(double ratio){
-    _data.clear();
+
     double adj_ratio = (_range->second - _range->first) * ratio;
+
+    if(_range->second - _range->first - 2*adj_ratio <= _renderArea->w * WTOP_RATIO)
+        return;
+
+    _data.clear();
 
     *_range = {_range->first + adj_ratio, _range->second - adj_ratio};
 
-    generator_data gen_data = {
+    worker_params params = {
         _range,
         &_min_y,
         &_max_y,
-        (int)(_renderArea->w * 1),
+        (int)(WTOP_RATIO * _renderArea->w),
         &_data
     };
 
-    _generator(gen_data);
+    _worker->run(params);
+
     _x_scale = std::abs(_range->second - _range->first);
     _y_scale  = std::abs(_max_y - _min_y);
 
 }
 
 void Plotter::shift(double ratio){
+
     _data.clear();
     double adj_ratio = (_range->second - _range->first) * ratio;
 
+
+
     *_range = {_range->first + adj_ratio, _range->second + adj_ratio};
 
-    generator_data gen_data = {
+    worker_params params = {
         _range,
         &_min_y,
         &_max_y,
-        (int)(_renderArea->w * 1),
+        (int)(WTOP_RATIO * _renderArea->w ),
         &_data
     };
 
-    _generator(gen_data);
+    _worker->run(params);
     _x_scale = std::abs(_range->second - _range->first);
     _y_scale  = std::abs(_max_y - _min_y);
 
@@ -172,17 +179,8 @@ void Plotter::feedEvent(SDL_Event* e){
         ) _is_mouse_over = true;
         else _is_mouse_over = false;
     }
-
-    auto now = std::chrono::system_clock::now();
-    auto time_passed = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_key_poll);
-
-    _key_pressed = SDLK_CLEAR;
-
-    if(time_passed.count() > 50 || true){
-        if(e->type == SDL_KEYDOWN){
-            _key_pressed = e->key.keysym.sym;
-            _last_key_poll = now;
+    else if(e->type == SDL_KEYDOWN){
+        _key_pressed = e->key.keysym.sym;
     }
 
-    }
 }

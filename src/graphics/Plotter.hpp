@@ -2,13 +2,25 @@
 #define PLOTTER_COMPONENT_H
 
 #include <SDL2/SDL.h>
-#include <chrono>
 
+#include "PlotterWorker.hpp"
 #include "Component.hpp"
 #include "common.hpp"
 
-class Plotter;
 
+ struct PlotterConfig {
+    PlotterWorker* worker;
+    dpair* range;
+    spair* units;
+    color_theme* theme;
+};
+
+struct AsyncPlotterConfig {
+    AsyncPlotterWorker* worker;
+    dpair* range;
+    spair* units;
+    color_theme* theme;
+};
 
 class Plotter : public Component{
     public:
@@ -16,7 +28,7 @@ class Plotter : public Component{
         void updateRange(dpair* new_range);
         void feedEvent(SDL_Event* e) override;
     private:
-        sample_generator _generator;
+        PlotterWorker* _worker;
         dpair* _range;
         std::vector<dpair> _data;
         double _min_y, _max_y;
@@ -26,7 +38,6 @@ class Plotter : public Component{
         int _mouse_x, _mouse_y;
         SDL_Keycode _key_pressed;
         spair* _units;
-        decltype(std::chrono::system_clock::now()) _last_key_poll;
 
         double scaleX(double x);
         double scaleY(double y);

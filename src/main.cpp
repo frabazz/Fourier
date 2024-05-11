@@ -1,23 +1,27 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL_ttf.h>
-#include <vector>
 #include <string>
 
 #include "common.hpp"
 #include "graphics/Plotter.hpp"
+#include "graphics/PlotterWorker.hpp"
 #include "audio/wave.hpp"
-
 
 #define WIDTH 800
 #define HEIGHT 500
+#define AUDIO_FILE "../assets/sin.wav"
 
-
-void generator2(generator_data data);
 
 int main(int argc, char* argv[]){
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
+
+    Wave::WaveFile wav_file = Wave::WaveFile(AUDIO_FILE);
+    if(!wav_file.open()){
+        std::cout << "erroring opening wav file" << std::endl;
+        return -1;
+    }
 
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
         std::cout << "error during initializing : " << SDL_GetError() << std::endl;
@@ -43,8 +47,10 @@ int main(int argc, char* argv[]){
 
     color_theme theme = {blue, red, black};
 
+    SampleReadWorker sampleReadWorker = SampleReadWorker(&wav_file);
+
     PlotterConfig Plotconf ={
-        generator2,
+        &sampleReadWorker,
         &range,
         &units,
         &theme
@@ -52,7 +58,7 @@ int main(int argc, char* argv[]){
 
 
     Plotter p = Plotter(&plotterArea, renderer, Plotconf);
-
+    //std::cout << "enterign render loop" << std::endl;
     while(!quit){
         if(SDL_PollEvent(&e) > 0){
             if(e.type == SDL_QUIT)
@@ -69,46 +75,7 @@ int main(int argc, char* argv[]){
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
+    wav_file.close();
     return 0;
 }
 
-
-void generator2(generator_data data){
-    Wave::WaveFile file = Wave::WaveFile("../assets/sin.wav");
-
-    if(file.open()){
-        double delta = (data.range->second - data.range->first)/static_cast<double>(data.npoints);
-
-        if(data.range->first < 0){
-            data.range->second += std::abs(data.range->first);
-            data.range->first = 0;
-            if(data.range->second > file.sampleSize)
-                data.range->second = file.sampleSize;
-        }
-
-        if(data.range->second > file.sampleSize){
-            data.range->first -= (data.range->second - file.sampleSize);
-            data.range->second = file.sampleSize;
-            if(data.range->first < 0)
-                data.range->first = 0;
-        }
-        std::cout << "calulcating on range: " << data.range->first << " " << data.range->second << std::endl;
-
-        file.seek(data.range->first);
-        for(int i = 0; i < data.npoints - 1; ++i){
-            double sample = 0.0;
-            file.readSample(&sample);
-            int cast_delta = i * delta;
-            file.seek(data.range->first +  (i + 1)*delta);
-            data.data->push_back({(int)data.range->first + cast_delta, sample});
-        }
-
-        *data.min_y = -1.25;
-        *data.max_y = 1.25;
-        file.close();
-        //std::cout << "gen vec of size " << data.data->size() << std::endl;
-    }
-    else
-        std::cout << "error opening file" << std::endl;
-}

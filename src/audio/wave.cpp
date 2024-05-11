@@ -17,6 +17,7 @@ WaveFile::WaveFile(string filename){
     subChunk2 = SubChunk2();
     chunks = vector<GenericSubChunk>();
     sampleSize = -1;
+    startPos = -1;
 }
 
 int WaveFile::open(){
@@ -60,7 +61,7 @@ int WaveFile::open(){
             chunks.push_back(chunk);
         }
     }
-
+    startPos = file.tellg();
     sampleSize = subChunk2.chunkSize/ subChunk1.numChannels / (subChunk1.bitsPerSample/8);
 
     return 1;
@@ -127,11 +128,19 @@ void WaveFile::readSample(double* psample){
 
 void WaveFile::seek(int samples){
     if(subChunk1.bitsPerSample == 8)
-        file.seekg(samples * subChunk1.numChannels * sizeof(int8_t));
+        file.seekg(samples * subChunk1.numChannels * sizeof(int8_t), ios::cur);
     else if(subChunk1.bitsPerSample == 16)
-        file.seekg(samples * subChunk1.numChannels * sizeof(int16_t));
+        file.seekg(samples * subChunk1.numChannels * sizeof(int16_t), ios::cur);
     else if(subChunk1.bitsPerSample == 32)
-        file.seekg(samples * subChunk1.numChannels * sizeof(int32_t));
+        file.seekg(samples * subChunk1.numChannels * sizeof(int32_t), ios::cur);
+}
+
+decltype(std::ifstream().tellg()) WaveFile::tell(){
+    return file.tellg();
+}
+
+void WaveFile::seekStart(){
+    file.seekg(startPos, ios::beg);
 }
 
 void WaveFile::close(){

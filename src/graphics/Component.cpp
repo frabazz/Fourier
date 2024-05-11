@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 
-#define FONT_DIR "./assets/default.ttf"
+#define FONT_DIR "../assets/default.ttf"
 
 Component::Component(SDL_Rect* renderArea, SDL_Renderer* renderer){
     _renderer = renderer;
