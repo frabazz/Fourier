@@ -2,15 +2,22 @@
 #include <SDL2/SDL.h>
 #include <SDL_ttf.h>
 #include <string>
+#include <chrono>
+
 
 #include "common.hpp"
 #include "graphics/Plotter.hpp"
 #include "graphics/PlotterWorker.hpp"
+#include "graphics/Event.hpp"
+#include "graphics/Timer.hpp"
 #include "audio/wave.hpp"
+
 
 #define WIDTH 800
 #define HEIGHT 500
 #define AUDIO_FILE "../assets/sin.wav"
+
+
 
 
 int main(int argc, char* argv[]){
@@ -35,7 +42,7 @@ int main(int argc, char* argv[]){
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
 
-    SDL_Event e;
+    events::Event e = events::Event();
     bool quit = false;
 
     dpair range = {0, 5000};
@@ -59,23 +66,41 @@ int main(int argc, char* argv[]){
 
     Plotter p = Plotter(&plotterArea, renderer, Plotconf);
     //std::cout << "enterign render loop" << std::endl;
+    SDL_Event ev;
     while(!quit){
-        if(SDL_PollEvent(&e) > 0){
-            if(e.type == SDL_QUIT)
-                quit = true;
+        MyTimer::Timer t = MyTimer::Timer();
+
+
+        if(SDL_PollEvent(&ev) > 0){
+            e = events::Event(&ev);
             p.feedEvent(&e);
         }
+
+
+
+        //events::Event::pollEvent(&e);
+        if(e.isSDL() && e.sdl_event->type == SDL_QUIT){
+            quit = true;
+        }
+
+        //std::cout << "pollEvent duration : " << timer.measure() << std::endl;
+        //p.feedEvent(&e);
+        std::cout << t.measure() << std::endl;
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         p.render();
         SDL_RenderPresent(renderer);
+
     }
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     wav_file.close();
-    return 0;
-}
 
+
+    return 0;
+
+
+}

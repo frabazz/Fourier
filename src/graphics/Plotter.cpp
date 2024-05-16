@@ -1,13 +1,15 @@
 #include <SDL_events.h>
 #include <SDL_keycode.h>
-#include <chrono>
+
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 
+#include "Event.hpp"
 #include "common.hpp"
 #include "Plotter.hpp"
+#include "Timer.hpp"
 
 #define AXIS_WIDTH 3
 #define CROSS_SIZE 10
@@ -114,8 +116,13 @@ inline std::string doubleToString(double x, int precision){
   return stream.str();
 }
 
+
 void Plotter::componentRender(){
     //draw axis
+    //
+
+    MyTimer::Timer t = MyTimer::Timer();
+
     setColor(_theme->secondary_color);
     SDL_Rect x_axis = {0, _renderArea->h - AXIS_WIDTH, _renderArea->w, AXIS_WIDTH};
     SDL_Rect y_axis = {0, 0, AXIS_WIDTH, _renderArea->h - AXIS_WIDTH};
@@ -146,41 +153,45 @@ void Plotter::componentRender(){
         double index_percentage = static_cast<double>(_mouse_x - _renderArea->x - AXIS_WIDTH)/static_cast<double>(_renderArea->w - AXIS_WIDTH);
         int index = std::floor(index_percentage * static_cast<double>(_data.size() - 1));
         std::string text = doubleToString(_data[index].first, 2) + " " + _units->first + ", " + doubleToString(_data[index].second, 2) + " " + _units->second;
+
+
         drawToolTip(text, &area, _theme->primary_color);
-
-    }
-
-
-    switch(_key_pressed){
-        case SDLK_RIGHT:
-            shift(0.1);
-            break;
-        case SDLK_LEFT:
-            shift(-0.1);
-            break;
-        case SDLK_PLUS:
-            zoom(0.1);
-            break;
-        case SDLK_MINUS:
-            zoom(-0.1);
-            break;
-    }
-
-    _key_pressed = SDLK_CLEAR;
 }
 
-void Plotter::feedEvent(SDL_Event* e){
-    if(e->type == SDL_MOUSEMOTION){
-        _mouse_x = e->motion.x;
-        _mouse_y = e->motion.y;
 
-        if(_mouse_x > _renderArea->x + AXIS_WIDTH && _mouse_x < _renderArea->x + _renderArea->w &&
-          _mouse_y > _renderArea->y && _mouse_y < _renderArea->y + _renderArea->h - AXIS_WIDTH
-        ) _is_mouse_over = true;
-        else _is_mouse_over = false;
-    }
-    else if(e->type == SDL_KEYDOWN){
-        _key_pressed = e->key.keysym.sym;
-    }
+switch(_key_pressed){
+    case SDLK_RIGHT:
+        shift(0.1);
+        break;
+    case SDLK_LEFT:
+        shift(-0.1);
+        break;
+    case SDLK_PLUS:
+        zoom(0.1);
+        break;
+    case SDLK_MINUS:
+        zoom(-0.1);
+        break;
+}
+
+
+
+}
+
+void Plotter::feedEvent(events::Event* e){
+if(e->isSDL() &&  e->sdl_event->type == SDL_MOUSEMOTION){
+    _mouse_x = e->sdl_event->motion.x;
+    _mouse_y = e->sdl_event->motion.y;
+
+    if(_mouse_x > _renderArea->x + AXIS_WIDTH && _mouse_x < _renderArea->x + _renderArea->w &&
+        _mouse_y > _renderArea->y && _mouse_y < _renderArea->y + _renderArea->h - AXIS_WIDTH
+    ) _is_mouse_over = true;
+    else _is_mouse_over = false;
+}
+else if(e->isSDL() && e->sdl_event->type == SDL_KEYDOWN){
+    _key_pressed = e->sdl_event->key.keysym.sym;
+}
+else
+    _key_pressed = SDLK_CLEAR;
 
 }

@@ -16,26 +16,26 @@
 
 namespace Wave {
 
-    class WaveFile{
+class WaveFile{
 
-        private:
-            std::ifstream file;
-            std::string filename;
-            decltype(std::ifstream().tellg()) startPos;
-        public:
-            int sampleSize;
-            Chunks::RIFFChunk riffChunk;
-            Chunks::SubChunk1 subChunk1;
-            Chunks::SubChunk2 subChunk2;
-            std::vector <Chunks::GenericSubChunk> chunks;
+    private:
+        std::ifstream file;
+        std::string filename;
+        decltype(std::ifstream().tellg()) startPos;
+    public:
+        int sampleSize;
+        Chunks::RIFFChunk riffChunk;
+        Chunks::SubChunk1 subChunk1;
+        Chunks::SubChunk2 subChunk2;
+        std::vector <Chunks::GenericSubChunk> chunks;
 
-            WaveFile(std::string filename);
-            int open();
-            void printInfo();
-            bool sanityCheck();
-            void readSample(std::vector<double>* sample);
-            void readSample(double* sample);
-            void seek(int samples);
+        WaveFile(std::string filename);
+        int open();
+        void printInfo();
+        bool sanityCheck();
+        void readSample(std::vector<double>* sample);
+        void readSample(double* sample);
+        void seek(int samples);
             decltype(std::ifstream().tellg()) tell();
             void seekStart();
             void close();

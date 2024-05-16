@@ -5,6 +5,8 @@
 #include <SDL_ttf.h>
 #include <string>
 
+#include "Event.hpp"
+
 class Component {
     public:
         Component(SDL_Rect* renderArea, SDL_Renderer* renderer);
@@ -25,7 +27,7 @@ class Component {
 
         //implemented specifically by components
         virtual void componentRender() = 0;
-        virtual void feedEvent(SDL_Event* e) = 0;
+        virtual void feedEvent(events::Event* e) = 0;
 };
 
 #endif

@@ -6,7 +6,7 @@
 #include "PlotterWorker.hpp"
 #include "Component.hpp"
 #include "common.hpp"
-
+#include "Event.hpp"
 
  struct PlotterConfig {
     PlotterWorker* worker;
@@ -26,7 +26,7 @@ class Plotter : public Component{
     public:
         Plotter(SDL_Rect* _renderArea, SDL_Renderer* _renderer, PlotterConfig config);
         void updateRange(dpair* new_range);
-        void feedEvent(SDL_Event* e) override;
+        void feedEvent(events::Event* e) override;
     private:
         PlotterWorker* _worker;
         dpair* _range;
