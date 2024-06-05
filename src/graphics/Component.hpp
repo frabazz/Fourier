@@ -2,6 +2,7 @@
 #define GRAPHIC_COMPONENT_H
 
 #include <SDL2/SDL.h>
+#include <SDL_events.h>
 #include <SDL_ttf.h>
 #include <string>
 
@@ -27,7 +28,7 @@ class Component {
 
         //implemented specifically by components
         virtual void componentRender() = 0;
-        virtual void feedEvent(events::Event* e) = 0;
+        virtual void feedEvent(SDL_Event* e) = 0;
 };
 
 #endif

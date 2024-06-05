@@ -1,5 +1,6 @@
 #include <SDL_events.h>
 #include <SDL_keycode.h>
+#include <SDL_mouse.h>
 
 #include <string>
 #include <iostream>
@@ -121,7 +122,6 @@ void Plotter::componentRender(){
     //draw axis
     //
 
-    MyTimer::Timer t = MyTimer::Timer();
 
     setColor(_theme->secondary_color);
     SDL_Rect x_axis = {0, _renderArea->h - AXIS_WIDTH, _renderArea->w, AXIS_WIDTH};
@@ -156,6 +156,7 @@ void Plotter::componentRender(){
 
 
         drawToolTip(text, &area, _theme->primary_color);
+
 }
 
 
@@ -178,18 +179,18 @@ switch(_key_pressed){
 
 }
 
-void Plotter::feedEvent(events::Event* e){
-if(e->isSDL() &&  e->sdl_event->type == SDL_MOUSEMOTION){
-    _mouse_x = e->sdl_event->motion.x;
-    _mouse_y = e->sdl_event->motion.y;
+void Plotter::feedEvent(SDL_Event* e){
+if(e->type == SDL_MOUSEMOTION){
+    _mouse_x = e->motion.x;
+    _mouse_y = e->motion.y;
 
     if(_mouse_x > _renderArea->x + AXIS_WIDTH && _mouse_x < _renderArea->x + _renderArea->w &&
         _mouse_y > _renderArea->y && _mouse_y < _renderArea->y + _renderArea->h - AXIS_WIDTH
     ) _is_mouse_over = true;
     else _is_mouse_over = false;
 }
-else if(e->isSDL() && e->sdl_event->type == SDL_KEYDOWN){
-    _key_pressed = e->sdl_event->key.keysym.sym;
+else if(e->type == SDL_KEYDOWN){
+    _key_pressed = e->key.keysym.sym;
 }
 else
     _key_pressed = SDLK_CLEAR;
