@@ -1,5 +1,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <SDL_events.h>
+#include <SDL_mouse.h>
 #include <SDL_ttf.h>
 #include <string>
 #include <chrono>
@@ -67,25 +69,24 @@ int main(int argc, char* argv[]){
     Plotter p = Plotter(&plotterArea, renderer, Plotconf);
     //std::cout << "enterign render loop" << std::endl;
     SDL_Event ev;
+
+    SDL_ShowCursor(0);
+
     while(!quit){
         MyTimer::Timer t = MyTimer::Timer();
 
 
-        if(SDL_PollEvent(&ev) > 0){
-            e = events::Event(&ev);
-            p.feedEvent(&e);
+        while(SDL_PollEvent(&ev) > 0){
+            p.feedEvent(&ev);
+            if(ev.type == SDL_QUIT)
+                quit = true;
         }
 
 
-
-        //events::Event::pollEvent(&e);
-        if(e.isSDL() && e.sdl_event->type == SDL_QUIT){
-            quit = true;
-        }
 
         //std::cout << "pollEvent duration : " << timer.measure() << std::endl;
         //p.feedEvent(&e);
-        std::cout << t.measure() << std::endl;
+        //std::cout << t.measure() << "ms\n";
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);

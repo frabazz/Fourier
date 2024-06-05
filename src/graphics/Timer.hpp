@@ -13,7 +13,7 @@ class Timer{
 
         int measure(){
             auto now = std::chrono::system_clock::now();
-            auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(now - _start_time);
+            auto delta = std::chrono::duration_cast<std::chrono::microseconds>(now - _start_time);
             return delta.count();
         }
 
