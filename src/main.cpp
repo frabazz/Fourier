@@ -10,7 +10,6 @@
 #include "common.hpp"
 #include "graphics/Plotter.hpp"
 #include "graphics/PlotterWorker.hpp"
-#include "graphics/Event.hpp"
 #include "graphics/Timer.hpp"
 #include "audio/wave.hpp"
 
@@ -44,7 +43,6 @@ int main(int argc, char* argv[]){
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_ADD);
 
-    events::Event e = events::Event();
     bool quit = false;
 
     dpair range = {0, 5000};

@@ -175,7 +175,7 @@ switch(_key_pressed){
         break;
 }
 
-
+_key_pressed = SDLK_CLEAR;
 
 }
 
@@ -192,7 +192,5 @@ if(e->type == SDL_MOUSEMOTION){
 else if(e->type == SDL_KEYDOWN){
     _key_pressed = e->key.keysym.sym;
 }
-else
-    _key_pressed = SDLK_CLEAR;
 
 }
