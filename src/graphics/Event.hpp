@@ -1,26 +1,10 @@
-#ifndef CUSTOM_EVENTZ_H
-#define CUSTOM_EVENTZ_H
+#ifndef CUSTOM_EVENT
+#define CUSTOM_EVENT
 
-#include <SDL2/SDL.h>
-
-namespace events{
-
-  class Event{
-    public:
-      Event();
-      Event(SDL_Event* e);
-      bool isSDL();
-      bool isCustom();
-
-      ~Event();
-
-      SDL_Event* sdl_event;
-      static void pollEvent(events::Event*);
-    private:
-      bool _is_sdl;
-      bool _is_custom;
-    };
-
-}
+enum event_codes {
+  PLOTTER_ZOOM,
+  PLOTTER_SHIFT,
+  PLOTTER_RECALC
+};
 
 #endif
