@@ -48,7 +48,8 @@ int main(int argc, char *argv[]) {
   spair units = {"sample", "dB"};
   SDL_Rect plotterArea = {100, 100, 400, 200};
 
-  
+  std::vector<dpair> test = std::vector<dpair>();
+  audio_workers::fft_worker(&wav_file, &test);
 
   Plotter p = Plotter(&plotterArea, renderer, &range, &units);
   // std::cout << "enterign render loop" << std::endl;

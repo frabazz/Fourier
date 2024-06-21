@@ -6,6 +6,7 @@ find_package(SDL2 REQUIRED)
 
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(CMAKE_CXX_FLAGS_DEBUG  "-g")
+set(CMAKE_BUILD_TYPE Debug)
 
 file(GLOB_RECURSE SOURCE_FILES "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.hpp")
 

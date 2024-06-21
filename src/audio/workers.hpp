@@ -15,8 +15,10 @@ namespace audio_workers {
     std::vector<dpair>* data;
   };
 
+  
   void sample_read_worker(sample_read_params params);
-
-}
+  void fft_worker(Wave::WaveFile* wav, std::vector<dpair>* data);
+  
+  }
 
 #endif
