@@ -2,20 +2,20 @@
 #include <SDL_events.h>
 #include <SDL_mouse.h>
 #include <SDL_ttf.h>
-#include <chrono>
 #include <iostream>
 #include <string>
 
 #include "Event.hpp"
 #include "audio/wave.hpp"
+#include "audio/workers.hpp"
 #include "common.hpp"
 #include "graphics/Plotter.hpp"
-#include "graphics/PlotterWorker.hpp"
 #include "graphics/Timer.hpp"
-
 #define WIDTH 800
 #define HEIGHT 500
 #define AUDIO_FILE "../assets/sin.wav"
+
+using namespace audio_workers;
 
 int main(int argc, char *argv[]) {
   SDL_Window *window = NULL;
@@ -47,13 +47,8 @@ int main(int argc, char *argv[]) {
   dpair range = {0, 5000};
   spair units = {"sample", "dB"};
   SDL_Rect plotterArea = {100, 100, 400, 200};
-  SDL_Color red = {255, 0, 0, 255};
-  SDL_Color blue = {0, 255, 255, 255};
-  SDL_Color black = {0, 0, 0, 255};
 
-  color_theme theme = {blue, red, black};
-
-  SampleReadWorker sampleReadWorker = SampleReadWorker(&wav_file);
+  
 
   Plotter p = Plotter(&plotterArea, renderer, &range, &units);
   // std::cout << "enterign render loop" << std::endl;
@@ -71,7 +66,7 @@ int main(int argc, char *argv[]) {
 	plotter_recalc_ev *recalc_ev = (plotter_recalc_ev*) ev.user.data1;
 	
 	recalc_ev->data->clear();
-
+	/*
 	sampleReadWorker.run({
 	    recalc_ev->range,
 	    recalc_ev->min_y,
@@ -79,6 +74,16 @@ int main(int argc, char *argv[]) {
 	    recalc_ev->npoints,
 	    recalc_ev->data
 	  });
+	*/
+	
+	sample_read_worker({
+	    &wav_file,
+	    recalc_ev->range,
+	    recalc_ev->min_y,
+	    recalc_ev->max_y,
+	    recalc_ev->npoints,
+	    recalc_ev->data
+	});
 	
       }
 

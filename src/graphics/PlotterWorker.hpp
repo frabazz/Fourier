@@ -4,7 +4,7 @@
 #include <mutex>
 
 #include "../audio/wave.hpp"
-#include "common.hpp"
+#include "../common.hpp"
 
 struct worker_params {
     dpair* range;

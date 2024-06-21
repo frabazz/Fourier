@@ -2,9 +2,10 @@
 #define PLOTTER_COMPONENT_H
 
 #include <SDL2/SDL.h>
+#include <vector>
 
 #include "Component.hpp"
-#include "common.hpp"
+#include "../common.hpp"
 
 
 struct plotter_recalc_ev{

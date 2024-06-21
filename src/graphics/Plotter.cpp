@@ -10,7 +10,6 @@
 
 #include "Event.hpp"
 #include "Plotter.hpp"
-#include "common.hpp"
 
 #define AXIS_WIDTH 3
 #define CROSS_SIZE 10
