@@ -4,18 +4,18 @@
 #include <SDL2/SDL.h>
 #include <vector>
 
-#include "Component.hpp"
 #include "../common.hpp"
+#include "Component.hpp"
 
-
-struct plotter_recalc_ev{
+struct plotter_recalc_ev {
   std::vector<dpair> *data;
-  double* min_y;
-  double* max_y;
+  double *min_y;
+  double *max_y;
   dpair *range;
   int npoints;
 };
-    
+
+namespace Component {
 
 class Plotter : public Component {
 public:
@@ -34,12 +34,13 @@ private:
   SDL_Keycode _key_pressed;
   spair *_units;
 
-  void   sendRecalcEvent();
+  void sendRecalcEvent();
   double scaleX(double x);
   double scaleY(double y);
-  void   componentRender() override;
-  void   zoom(double ratio);
-  void   shift(double ratio);
+  void componentRender() override;
+  void zoom(double ratio);
+  void shift(double ratio);
 };
 
+} // namespace Component
 #endif

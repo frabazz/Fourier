@@ -7,27 +7,27 @@
 
 #define FONT_DIR "../assets/default.ttf"
 
-Component::Component(SDL_Rect* renderArea, SDL_Renderer* renderer){
+Component::Component::Component(SDL_Rect* renderArea, SDL_Renderer* renderer){
     _renderer = renderer;
     _renderArea = renderArea;
     _default_font = TTF_OpenFont(FONT_DIR, 200);
 }
 
-void Component::fillRect(SDL_Rect* rect){
+void Component::Component::fillRect(SDL_Rect* rect){
     SDL_Rect r = {rect->x + _renderArea->x,  rect->y + _renderArea->y, rect->w, rect->h};
     SDL_RenderFillRect(_renderer, &r);
 }
 
-void Component::drawRect(SDL_Rect* rect){
+void Component::Component::drawRect(SDL_Rect* rect){
     SDL_Rect r = {rect->x + _renderArea->x,  rect->y + _renderArea->y, rect->w, rect->h};
     SDL_RenderDrawRect(_renderer, &r);
 }
 
-void Component::drawPoint(float x, float y){
+void Component::Component::drawPoint(float x, float y){
     SDL_RenderDrawPoint(_renderer, _renderArea->x + x, _renderArea->y + y);
 }
 
-void Component::drawLine(float x1, float y1, float x2, float y2){
+void Component::Component::drawLine(float x1, float y1, float x2, float y2){
     SDL_RenderDrawLineF(_renderer, _renderArea->x +x1, _renderArea->y + y1, _renderArea->x + x2, _renderArea->y + y2);
 }
 
@@ -40,7 +40,7 @@ inline double rfpart(double x){
     return 1 - fpart(x);
 }
 
-void Component::drawLineAA(float x0, float y0, float x1, float y1, SDL_Color color) {
+void Component::Component::drawLineAA(float x0, float y0, float x1, float y1, SDL_Color color) {
 
     auto fpart = [](double x) { return x - std::floor(x); };
 
@@ -130,7 +130,7 @@ void Component::drawLineAA(float x0, float y0, float x1, float y1, SDL_Color col
 }
 
 
-void Component::drawToolTip(std::string text, SDL_Rect* area, SDL_Color bgColor){
+void Component::Component::drawToolTip(std::string text, SDL_Rect* area, SDL_Color bgColor){
     SDL_Surface* surface = TTF_RenderText_Blended(_default_font, text.c_str(), bgColor);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(_renderer, surface);
     if(texture == NULL)
@@ -144,11 +144,11 @@ void Component::drawToolTip(std::string text, SDL_Rect* area, SDL_Color bgColor)
     SDL_DestroyTexture(texture);
 }
 
-void Component::setColor(SDL_Color c){
+void Component::Component::setColor(SDL_Color c){
     SDL_SetRenderDrawColor(_renderer, c.r, c.g, c.b, c.a);
 }
 
-void Component::render(){
+void Component::Component::render(){
     //do stuff, TODO viewport
     componentRender();
 }

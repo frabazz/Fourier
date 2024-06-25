@@ -15,7 +15,7 @@
 #define CROSS_SIZE 10
 #define WTOP_RATIO 0.8
 
-Plotter::Plotter(SDL_Rect *renderArea, SDL_Renderer *renderer, dpair *range,    
+Component::Plotter::Plotter(SDL_Rect *renderArea, SDL_Renderer *renderer, dpair *range,    
                  spair *units)
     : Component(renderArea, renderer) {
 
@@ -34,7 +34,7 @@ Plotter::Plotter(SDL_Rect *renderArea, SDL_Renderer *renderer, dpair *range,
   _y_scale = INT_MAX;
 }
 
-void Plotter::sendRecalcEvent() {
+void Component::Plotter::sendRecalcEvent() {
 
   plotter_recalc_ev *recalc_ev = new plotter_recalc_ev;
   *recalc_ev = {&_data, &_min_y, &_max_y, _range,
@@ -48,7 +48,7 @@ void Plotter::sendRecalcEvent() {
   SDL_PushEvent(&ev);
 }
 
-void Plotter::zoom(double ratio) {
+void Component::Plotter::zoom(double ratio) {
 
   double adj_ratio = (_range->second - _range->first) * ratio;
 
@@ -65,7 +65,7 @@ void Plotter::zoom(double ratio) {
   _y_scale = std::abs(_max_y - _min_y);
 }
 
-void Plotter::shift(double ratio) {
+void Component::Plotter::shift(double ratio) {
 
   _data.clear();
   double adj_ratio = (_range->second - _range->first) * ratio;
@@ -77,13 +77,13 @@ void Plotter::shift(double ratio) {
   _y_scale = std::abs(_max_y - _min_y);
 }
 
-double Plotter::scaleX(double x) {
+double Component::Plotter::scaleX(double x) {
   // TODO, add logarithmic scale
   return ((x - _range->first) / (_x_scale) * (_renderArea->w - AXIS_WIDTH)) +
          AXIS_WIDTH;
 }
 
-double Plotter::scaleY(double y) {
+double Component::Plotter::scaleY(double y) {
   // TODO, add logarithmic scale
   return (((1 - (y - _min_y) / (_y_scale)) * (_renderArea->h - AXIS_WIDTH)));
 }
@@ -94,7 +94,7 @@ inline std::string doubleToString(double x, int precision) {
   return stream.str();
 }
 
-void Plotter::componentRender() {
+void Component::Plotter::componentRender() {
   // draw axis
    if(_data.empty()) {
     sendRecalcEvent();
@@ -157,7 +157,7 @@ void Plotter::componentRender() {
   _key_pressed = SDLK_CLEAR;
 }
 
-void Plotter::feedEvent(SDL_Event *e) {
+void Component::Plotter::feedEvent(SDL_Event *e) {
   if (e->type == SDL_MOUSEMOTION) {
     _mouse_x = e->motion.x;
     _mouse_y = e->motion.y;

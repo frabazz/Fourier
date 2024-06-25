@@ -1,3 +1,4 @@
+
 #define _USE_MATH_DEFINES
 #define MIN_DOUBLE 0.0000000000001
 
@@ -7,23 +8,23 @@
 
 #include "transforms.h"
 #include "complex.h"
+#include <complex>
 
 typedef long double ld;
 
-using namespace CustomComplex;
-std::vector<Complex> Transforms::DFT(std::vector<ld> samples){
+std::vector<CustomComplex::Complex> Transforms::DFT(std::vector<ld> samples){
     int N = samples.size();
-    std::vector<Complex> res = std::vector<Complex>();
+    std::vector<CustomComplex::Complex> res = std::vector<CustomComplex::Complex>();
     for(int k = 0; k < N; ++k){
-        Complex c = Complex::fromPhase(0, 0);
+      CustomComplex::Complex c = CustomComplex::Complex::fromPhase(0, 0);
         for(int n = 0; n < N; ++n){
             ld exp = -(((2*M_PI*k*n)/N));
-            Complex nth = Complex::fromPhase(samples[n], exp);
+	    CustomComplex::Complex nth = CustomComplex::Complex::fromPhase(samples[n], exp);
             c = c + nth;
         }
         ld real = c.getReal(), img = c.getImg();
 
-        res.push_back(Complex::fromCoord(
+        res.push_back(CustomComplex::Complex::fromCoord(
             std::abs(real) < MIN_DOUBLE ? 0 : real,
             std::abs(img) < MIN_DOUBLE ? 0 : img
         ));
@@ -31,3 +32,7 @@ std::vector<Complex> Transforms::DFT(std::vector<ld> samples){
 
     return res;
 }
+
+std::vector<std::complex<double>> Transforms::FFT(std::vector<double>){
+  
+} 
