@@ -10,11 +10,11 @@ namespace Component {
 
 class Component {
 public:
-  Component(SDL_Rect *renderArea, SDL_Renderer *renderer);
+  Component(SDL_Rect renderArea, SDL_Renderer *renderer);
   void render();
 
 protected:
-  SDL_Rect *_renderArea;
+  SDL_Rect _renderArea;
   SDL_Renderer *_renderer;
   TTF_Font *_default_font;
 

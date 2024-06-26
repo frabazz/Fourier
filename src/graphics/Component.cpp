@@ -7,28 +7,28 @@
 
 #define FONT_DIR "../assets/default.ttf"
 
-Component::Component::Component(SDL_Rect* renderArea, SDL_Renderer* renderer){
+Component::Component::Component(SDL_Rect renderArea, SDL_Renderer* renderer){
     _renderer = renderer;
     _renderArea = renderArea;
     _default_font = TTF_OpenFont(FONT_DIR, 200);
 }
 
 void Component::Component::fillRect(SDL_Rect* rect){
-    SDL_Rect r = {rect->x + _renderArea->x,  rect->y + _renderArea->y, rect->w, rect->h};
+    SDL_Rect r = {rect->x + _renderArea.x,  rect->y + _renderArea.y, rect->w, rect->h};
     SDL_RenderFillRect(_renderer, &r);
 }
 
 void Component::Component::drawRect(SDL_Rect* rect){
-    SDL_Rect r = {rect->x + _renderArea->x,  rect->y + _renderArea->y, rect->w, rect->h};
+    SDL_Rect r = {rect->x + _renderArea.x,  rect->y + _renderArea.y, rect->w, rect->h};
     SDL_RenderDrawRect(_renderer, &r);
 }
 
 void Component::Component::drawPoint(float x, float y){
-    SDL_RenderDrawPoint(_renderer, _renderArea->x + x, _renderArea->y + y);
+    SDL_RenderDrawPoint(_renderer, _renderArea.x + x, _renderArea.y + y);
 }
 
 void Component::Component::drawLine(float x1, float y1, float x2, float y2){
-    SDL_RenderDrawLineF(_renderer, _renderArea->x +x1, _renderArea->y + y1, _renderArea->x + x2, _renderArea->y + y2);
+    SDL_RenderDrawLineF(_renderer, _renderArea.x +x1, _renderArea.y + y1, _renderArea.x + x2, _renderArea.y + y2);
 }
 
 

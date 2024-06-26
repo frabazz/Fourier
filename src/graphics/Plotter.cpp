@@ -15,8 +15,8 @@
 #define CROSS_SIZE 10
 #define WTOP_RATIO 0.8
 
-Component::Plotter::Plotter(SDL_Rect *renderArea, SDL_Renderer *renderer, dpair *range,    
-                 spair *units)
+Component::Plotter::Plotter(SDL_Rect renderArea, SDL_Renderer *renderer, dpair range,    
+                 spair units)
     : Component(renderArea, renderer) {
 
   _units = units;
@@ -37,8 +37,8 @@ Component::Plotter::Plotter(SDL_Rect *renderArea, SDL_Renderer *renderer, dpair 
 void Component::Plotter::sendRecalcEvent() {
 
   plotter_recalc_ev *recalc_ev = new plotter_recalc_ev;
-  *recalc_ev = {&_data, &_min_y, &_max_y, _range,
-                (int)(WTOP_RATIO * _renderArea->w)};
+  *recalc_ev = {&_data, &_min_y, &_max_y, &_range,
+                (int)(WTOP_RATIO * _renderArea.w)};
 
   SDL_Event ev;
   ev.type = SDL_USEREVENT;
@@ -50,42 +50,42 @@ void Component::Plotter::sendRecalcEvent() {
 
 void Component::Plotter::zoom(double ratio) {
 
-  double adj_ratio = (_range->second - _range->first) * ratio;
+  double adj_ratio = (_range.second - _range.first) * ratio;
 
-  if (_range->second - _range->first - 2 * adj_ratio <=
-      _renderArea->w * WTOP_RATIO)
+  if (_range.second - _range.first - 2 * adj_ratio <=
+      _renderArea.w * WTOP_RATIO)
     return;
 
   _data.clear();
 
-  *_range = {_range->first + adj_ratio, _range->second - adj_ratio};
+  _range = {_range.first + adj_ratio, _range.second - adj_ratio};
   sendRecalcEvent();
 
-  _x_scale = std::abs(_range->second - _range->first);
+  _x_scale = std::abs(_range.second - _range.first);
   _y_scale = std::abs(_max_y - _min_y);
 }
 
 void Component::Plotter::shift(double ratio) {
 
   _data.clear();
-  double adj_ratio = (_range->second - _range->first) * ratio;
+  double adj_ratio = (_range.second - _range.first) * ratio;
 
-  *_range = {_range->first + adj_ratio, _range->second + adj_ratio};
+  _range = {_range.first + adj_ratio, _range.second + adj_ratio};
   sendRecalcEvent();
 
-  _x_scale = std::abs(_range->second - _range->first);
+  _x_scale = std::abs(_range.second - _range.first);
   _y_scale = std::abs(_max_y - _min_y);
 }
 
 double Component::Plotter::scaleX(double x) {
   // TODO, add logarithmic scale
-  return ((x - _range->first) / (_x_scale) * (_renderArea->w - AXIS_WIDTH)) +
+  return ((x - _range.first) / (_x_scale) * (_renderArea.w - AXIS_WIDTH)) +
          AXIS_WIDTH;
 }
 
 double Component::Plotter::scaleY(double y) {
   // TODO, add logarithmic scale
-  return (((1 - (y - _min_y) / (_y_scale)) * (_renderArea->h - AXIS_WIDTH)));
+  return (((1 - (y - _min_y) / (_y_scale)) * (_renderArea.h - AXIS_WIDTH)));
 }
 
 inline std::string doubleToString(double x, int precision) {
@@ -97,16 +97,17 @@ inline std::string doubleToString(double x, int precision) {
 void Component::Plotter::componentRender() {
   // draw axis
    if(_data.empty()) {
+     std::cout << "empty!" << std::endl;
     sendRecalcEvent();
     return;
    }
+
+   
   SDL_Color c = {0, 0, 255, 255};
   setColor(c);
-
-  SDL_Rect x_axis = {0, _renderArea->h - AXIS_WIDTH, _renderArea->w,
+  SDL_Rect x_axis = {0, _renderArea.h - AXIS_WIDTH, _renderArea.w,
                      AXIS_WIDTH};
-  SDL_Rect y_axis = {0, 0, AXIS_WIDTH, _renderArea->h - AXIS_WIDTH};
-
+  SDL_Rect y_axis = {0, 0, AXIS_WIDTH, _renderArea.h - AXIS_WIDTH};
   fillRect(&x_axis);
   fillRect(&y_axis);
   // draw function
@@ -128,13 +129,13 @@ void Component::Plotter::componentRender() {
     SDL_Rect area = {_mouse_x + CROSS_SIZE, _mouse_y + CROSS_SIZE, 200, 20};
 
     double index_percentage =
-        static_cast<double>(_mouse_x - _renderArea->x - AXIS_WIDTH) /
-        static_cast<double>(_renderArea->w - AXIS_WIDTH);
+        static_cast<double>(_mouse_x - _renderArea.x - AXIS_WIDTH) /
+        static_cast<double>(_renderArea.w - AXIS_WIDTH);
     int index =
         std::floor(index_percentage * static_cast<double>(_data.size() - 1));
     std::string text =
-        doubleToString(_data[index].first, 2) + " " + _units->first + ", " +
-        doubleToString(_data[index].second, 2) + " " + _units->second;
+        doubleToString(_data[index].first, 2) + " " + _units.first + ", " +
+        doubleToString(_data[index].second, 2) + " " + _units.second;
 
     drawToolTip(text, &area, {0, 0, 255});
   }
@@ -162,17 +163,17 @@ void Component::Plotter::feedEvent(SDL_Event *e) {
     _mouse_x = e->motion.x;
     _mouse_y = e->motion.y;
 
-    if (_mouse_x > _renderArea->x + AXIS_WIDTH &&
-        _mouse_x < _renderArea->x + _renderArea->w &&
-        _mouse_y > _renderArea->y &&
-        _mouse_y < _renderArea->y + _renderArea->h - AXIS_WIDTH)
+    if (_mouse_x > _renderArea.x + AXIS_WIDTH &&
+        _mouse_x < _renderArea.x + _renderArea.w &&
+        _mouse_y > _renderArea.y &&
+        _mouse_y < _renderArea.y + _renderArea.h - AXIS_WIDTH)
       _is_mouse_over = true;
     else
       _is_mouse_over = false;
   } else if (e->type == SDL_KEYDOWN) {
     _key_pressed = e->key.keysym.sym;
   } else if (e->type == SDL_USEREVENT && e->user.code == PLOTTER_RECALC) {
-    _x_scale = std::abs(_range->second - _range->first);
+    _x_scale = std::abs(_range.second - _range.first);
     _y_scale = std::abs(_max_y - _min_y);
   }
 }
