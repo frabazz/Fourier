@@ -37,7 +37,7 @@ Component::Plotter::Plotter(SDL_Rect renderArea, SDL_Renderer *renderer, dpair r
 void Component::Plotter::sendRecalcEvent() {
 
   plotter_recalc_ev *recalc_ev = new plotter_recalc_ev;
-  *recalc_ev = {&_data, &_min_y, &_max_y, &_range,
+  *recalc_ev = {this, &_data, &_min_y, &_max_y, &_range,
                 (int)(WTOP_RATIO * _renderArea.w)};
 
   SDL_Event ev;

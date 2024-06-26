@@ -7,16 +7,12 @@
 #include "../common.hpp"
 #include "Component.hpp"
 
-struct plotter_recalc_ev {
-  std::vector<dpair> *data;
-  double *min_y;
-  double *max_y;
-  dpair *range;
-  int npoints;
-};
+struct plotter_recalc_ev;
 
 namespace Component {
 
+
+  
 class Plotter : public Component {
 public:
   Plotter(SDL_Rect renderArea, SDL_Renderer *renderer, dpair range,
@@ -43,4 +39,18 @@ private:
 };
 
 } // namespace Component
+
+struct plotter_recalc_ev {
+  Component::Plotter* from;
+  std::vector<dpair> *data;
+  double *min_y;
+  double *max_y;
+  dpair *range;
+  int npoints;
+};
+
+
 #endif
+
+
+

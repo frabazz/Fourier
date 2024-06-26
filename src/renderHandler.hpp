@@ -14,8 +14,12 @@ private:
   SDL_Window* _window = NULL;
   Wave::WaveFile* _wav = NULL;
   Component::Plotter* _signalPlotter = NULL;
+  Component::Plotter* _fftPlotter = NULL;
   int _width, _heigth;
   SDL_Event* _event;
+
+  void handlePlotterRecalcEvent();
+  
 public:
   RenderHandler(int width, int heigth);
   bool initSDL();

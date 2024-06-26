@@ -1,4 +1,5 @@
 #include "renderHandler.hpp"
+#include "audio/workers.hpp"
 
 #define WIDTH 800
 #define HEIGHT 500
@@ -7,6 +8,8 @@
 
 
 int main(int argc, char *argv[]) {
+  
+  
   RenderHandler handler = RenderHandler(WIDTH, HEIGHT);
   if(!handler.initSDL() || !handler.initWav(AUDIO_FILE) || !handler.initComponents())
     return -1;
