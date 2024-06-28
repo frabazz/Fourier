@@ -8,7 +8,7 @@
 #include <SDL_mouse.h>
 #include <iostream>
 
-#define FFT_FILENAME string("gianni")
+#define FFT_FILENAME "gianni"
 
 using audio_workers::sample_read_worker;
 using Component::Plotter;
@@ -60,7 +60,8 @@ bool RenderHandler::initWav(string filename) {
     return false;
   }
 
-  audio_workers::fft_worker(_wav, "gianni");
+  _fft_file = new FileVector<std::complex<double>>("pino");
+  audio_workers::fft_worker(_wav, _fft_file);
   cout << "FFT finished" << endl;
   return true;
 }
@@ -119,7 +120,7 @@ void RenderHandler::handlePlotterRecalcEvent() {
                       recalc_ev->max_y, recalc_ev->npoints, recalc_ev->data});
   else if(recalc_ev->from == _fftPlotter){
     audio_workers::fft_read_worker({
-	"gianni",
+	_fft_file,
 	recalc_ev->range,
 	recalc_ev->min_y,
 	recalc_ev->max_y,
@@ -134,5 +135,10 @@ RenderHandler::~RenderHandler() {
   SDL_DestroyRenderer(_renderer);
   SDL_DestroyWindow(_window);
   SDL_Quit();
+  _fft_file->close();
   _wav->close();
+  delete _wav;
+  delete _fft_file;
+  delete _fftPlotter;
+  delete _signalPlotter;
 }

@@ -1,17 +1,14 @@
 #include "workers.hpp"
+#include "FileVector.hpp"
 #include "wave.hpp"
 
 #include <cmath>
-#include <fstream>
-#include <iostream>
-#include <vector>
 #include <complex>
-#include <fstream>
+#include <iostream>
 #include <string>
+#include <vector>
 
 using namespace audio_workers;
-using std::fstream;
-using std::string;
 
 namespace {
 
@@ -27,72 +24,8 @@ uint32_t reverse(uint32_t x, int s) {
   return r;
 }
 
-template<typename T> class fileVector{
-public:
-  fileVector(string filename){
-    _stream = fstream(filename, std::ios::binary | std::ios::out);
-    if(!_stream.is_open())
-      std::cout << "error!" << std::endl;
-    _stream.close();
-    _stream = fstream(filename, std::ios::binary | std::ios::in | std::ios::out);
-    _size = 0;
-    _curr = 0; // TODO: 0?
-  } 
-  
-  void push_back(T x){
-    //TODO: all function should point at last elem
-    _stream.write((char*)&x, sizeof(T));
-    _size++;
-    _curr += sizeof(T);
-  }
-
-  void swap(int i1, int i2){
-    T x1, tmp;
-    // v[i1] -> x1
-    _stream.seekg(i1 * sizeof(T), std::ios::beg);
-    _stream.read((char*)&x1, sizeof(T));
-
-    //v[i2] -> tmp
-    _stream.seekg(i2 * sizeof(T), std::ios::beg);
-    _stream.read((char*)&tmp, sizeof(T));
-
-    //x1 -> v[i2]
-    _stream.seekp(i2 * sizeof(T), std::ios::beg);
-    _stream.write((char*)&x1, sizeof(T));
-
-    //tmp -> v[i1]
-    _stream.seekp(i1 * sizeof(T), std::ios::beg);
-    _stream.write((char*)&tmp, sizeof(T));
-  }
-
-  T at(int i){
-    int x;
-    _stream.seekg(i * sizeof(T), std::ios::beg);
-    _stream.read((char*)&x, sizeof(T));
-    return x;
-
-  }
-
-  void set(int i, T x){
-    _stream.seekp(i * sizeof(T), std::ios::beg);
-    _stream.write((char*)&x, sizeof(T));
-  }
-  
-  int size(){
-    return _size;
-  }
-
-  void close(){
-    _stream.close();
-  }
-  
-private:
-  std::ios::pos_type _curr;
-  int _size;
-  fstream _stream;
-};
-
-void FFT(fileVector<std::complex<double>>* samples, string filename, int isign) {
+void FFT(FileVector<std::complex<double>> *samples,
+         int isign) {
   int N = samples->size();
   if (N & (N - 1)) {
     std::cout << "N is not 2 power" << std::endl;
@@ -105,11 +38,10 @@ void FFT(fileVector<std::complex<double>>* samples, string filename, int isign) 
 
   for (int i = 0; i < N / 2; ++i) {
     int r = reverse(i, p);
-    //std::swap(v[i], v[r]);
+    // std::swap(v[i], v[r]);
     samples->swap(i, r);
   }
 
-  
   /*
   auto v_copy = std::vector<std::complex<double>>(v);
   auto v_out = std::vector<std::complex<double>>(N);
@@ -118,7 +50,8 @@ void FFT(fileVector<std::complex<double>>* samples, string filename, int isign) 
     for (int i = 0; i < p; ++i) {
       for (int j = 0; j < N; j += l) {
         std::complex odd = v_copy[j + (l >> 1)];
-        v_copy[j] = v_copy[j] + std::polar(1.0, (-1) * (2 * M_PI * k) / N) * odd;
+        v_copy[j] = v_copy[j] + std::polar(1.0, (-1) * (2 * M_PI * k) / N) *
+  odd;
       }
       l <<= 1; // io
     }
@@ -128,20 +61,19 @@ void FFT(fileVector<std::complex<double>>* samples, string filename, int isign) 
   */
 
   for (int s = 1; s <= p; ++s) {
-        int m = 1 << s;
-        std::complex<double> wm = std::polar(1.0, isign * 2.0 * M_PI / m);
-        for (int k = 0; k < N; k += m) {
-            std::complex<double> w = 1.0;
-            for (int j = 0; j < m / 2; ++j) {
-	      std::complex<double> t = w * samples->at(k + j + m / 2);
-	      std::complex<double> u = samples->at(k + j);
-	      samples->set(k + j , u + t);
-              samples->set(k + j + m / 2, u - t);
-                w *= wm;
-            }
-        }
+    int m = 1 << s;
+    std::complex<double> wm = std::polar(1.0, isign * 2.0 * M_PI / m);
+    for (int k = 0; k < N; k += m) {
+      std::complex<double> w = 1.0;
+      for (int j = 0; j < m / 2; ++j) {
+        std::complex<double> t = w * samples->at(k + j + m / 2);
+        std::complex<double> u = samples->at(k + j);
+        samples->set(k + j, u + t);
+        samples->set(k + j + m / 2, u - t);
+        w *= wm;
+      }
     }
-    
+  }
 }
 
 } // namespace
@@ -191,50 +123,54 @@ void audio_workers::sample_read_worker(sample_read_params params) {
   */
 }
 
-
-void audio_workers::fft_worker(Wave::WaveFile *wav, string filename){
+void audio_workers::fft_worker(Wave::WaveFile *wav, FileVector<std::complex<double>>* fft_file) {
   wav->seekStart();
 
-  //TODO int32?
+  // TODO int32?
   int sample_size = wav->sampleSize;
   int fft_size = 1;
-  
-  while(fft_size < sample_size){
+
+  while (fft_size < sample_size) {
     fft_size <<= 1;
   }
 
-  std::cout << "sample size : " << sample_size << " , fft_size: " << fft_size << std::endl; 
+  std::cout << "sample size : " << sample_size << " , fft_size: " << fft_size
+            << std::endl;
 
-  auto v = fileVector<std::complex<double>>(filename);
-  
+
   double sample;
-  double pad = 0.0;
+  std::complex<double> pad = {0.0, 0.0};
   int i = 0;
 
-  for(i = 0;i < sample_size; ++i){
+  for (i = 0; i < sample_size; ++i) {
     double s;
     wav->readSample(&s);
-    v.push_back({s, 0});
+    fft_file->push_back({s, 0});
   }
 
-  for(; i < fft_size; ++i)
-    v.push_back(pad);
+  for (; i < fft_size; ++i)
+    fft_file->push_back(pad);
 
-  for(i = 0;i < fft_size; ++i){
-    v.set(i, v.at(i) * 0.5*(1-cos(2* M_PI * i)/fft_size)); //TODO: add multiple windowing functions
+  for (i = 0; i < fft_size; ++i) {
+    fft_file->set(i, fft_file->at(i) * 0.5 *
+                 (1 - cos(2 * M_PI * i) /
+                          fft_size)); // TODO: add multiple windowing functions
   }
+
+  for(int i = 0; i < 100; ++i){
+    std::cout << fft_file->at(i) << " ";
+  }
+  std::cout << std::endl;
   
-  FFT(&v, filename, -1);
-  /*
-  for(int i = 0;i < fft_size >> 1; ++i)
-    std::cout << "freq : " << i * 44100/fft_size << "Hz, amp : " << (fft[i])*(2.0/fft_size) << std::endl;
-  */
+  FFT(fft_file,  -1);
+  
+  for(int i = 0;i < fft_size >> 1 && i < 100; ++i)
+    std::cout << "freq : " << i * 44100/fft_size << "Hz, amp : " <<
+      (fft_file->at(i))*(2.0/fft_size) << std::endl;
+  
 
-  v.close();
   wav->seekStart();
 }
-
-
 
 void audio_workers::fft_read_worker(fft_read_params params) {
   const int maxFreq = 20000;
@@ -256,25 +192,30 @@ void audio_workers::fft_read_worker(fft_read_params params) {
       (params.range->second - params.range->first) / (double)(params.npoints);
 
   int j = params.range->first;
-  auto v = fileVector<std::complex<double>>(params.filename);
-  
+
   for (int i = 0; i < params.npoints - 1; ++i) {
-    std::complex<double> sample = v.at(j);
+    double sample = std::abs(params.fft_file->at(j))/(double)params.fft_file->size();
     // std::cout << "read sample index " << params.range->first + (i+1) * delta
     // << " "; std::cout << "position : " << _wav_file->tell() << std::endl;
     //  std::cout << " of value " << sample << std::endl ;
     int cast_delta = i * delta;
-    j += (int(delta) - 1) * (44100.0 / (double)v.size());
-    
+    j += (int(delta) - 1) * (44100.0 / (double)params.fft_file->size());
+    double freq = (params.range->first + cast_delta) * (44100.0)/(double)params.fft_file->size();
+    if(i < 30){
+      //std::cout << "freq: " << freq << " Hz, amp: " << sample << std::endl;
+    }
     //_wav_file->seek((int)delta * (-1));
-    params.data->push_back({(int)params.range->first + cast_delta, std::abs(sample)/(double)v.size()});
+    params.data->push_back(
+        {(int)params.range->first + cast_delta,
+         sample});
+    if(sample <  *params.min_y)
+      *params.min_y = sample;
+    if(sample > *params.max_y)
+      *params.max_y = sample;
   }
 
-  v.close(); // leave it as we got it!
 
-  *params.min_y = -1.25;
-  *params.max_y = 1.25;
-  std::cout << "[SAMPLE READ WORKER] generated v of size: "
+  std::cout << "[FFT READ WORKER] generated v of size: "
             << params.data->size() << std::endl;
   /*     *_wav_file = Wave::WaveFile("../assets/sin.wav");
       if(!_wav_file->open())

@@ -3,6 +3,8 @@
 
 #include "wave.hpp"
 #include "../common.hpp"
+#include "FileVector.hpp"
+#include <complex>
 #include <string>
 
 namespace audio_workers {
@@ -17,7 +19,7 @@ namespace audio_workers {
   };
 
   struct fft_read_params{
-    std::string filename;
+    FileVector<std::complex<double>>* fft_file;
     dpair* range;
     double* min_y;
     double* max_y;
@@ -27,7 +29,7 @@ namespace audio_workers {
   
   
   void sample_read_worker(sample_read_params params);
-  void fft_worker(Wave::WaveFile* wav, std::string filename);
+  void fft_worker(Wave::WaveFile* wav, FileVector<std::complex<double>>* fft_file);
   void fft_read_worker(fft_read_params params);
   }
 
