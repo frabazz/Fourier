@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2.h>
 #include <SDL_events.h>
 #include <SDL_mouse.h>
 #include <SDL_ttf.h>
@@ -109,3 +110,5 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
+Cc: frabazz <francesco260403@gmail.com>
