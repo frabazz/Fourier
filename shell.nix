@@ -1,6 +1,7 @@
-# save this as shell.nix
-{ pkgs ? import <nixpkgs> {}}:
+with import <nixpkgs> {};
+
 
 pkgs.mkShell {
-  packages = [ pkgs.hello ];
+  name = "Fourier";
+  buildInputs = [hello SDL2 SDL2.dev SDL2_ttf SDL2_image];
 }
