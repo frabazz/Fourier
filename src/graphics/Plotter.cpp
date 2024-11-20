@@ -1,4 +1,4 @@
-#include <SDL_events.h>
+/*#include <SDL_events.h>
 #include <SDL_keycode.h>
 #include <SDL_mouse.h>
 
@@ -176,3 +176,4 @@ void Plotter::feedEvent(SDL_Event *e) {
     _y_scale = std::abs(_max_y - _min_y);
   }
 }
+*/
