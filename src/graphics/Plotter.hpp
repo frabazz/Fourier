@@ -20,7 +20,7 @@ private:
   std::vector<dpair> _data;
   double _min_y, _max_y;
   double _x_scale, _y_scale;
-
+  int _npoints;
   
   void calcData();
   double scaleX(double x);

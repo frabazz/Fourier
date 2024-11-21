@@ -13,60 +13,62 @@
 
 #define AXIS_WIDTH 3
 #define CROSS_SIZE 10
-#define WTOP_RATIO 0.8
-/*
-Plotter::Plotter(SDL_Rect renderArea, SDL_Renderer *renderer, dpair range)
-    : Component(renderArea, renderer) {
+#define WTOP_RATIO 0.5
+
+Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
 
   _range = range;
-  _max_y = 0;
-  _min_y = 0;
+  _max_y = 1.25;
+  _min_y = -1.25;
 
   _data = std::vector<dpair>();
-  _x_scale = INT_MAX;
-  _y_scale = INT_MAX;
+  _x_scale = std::abs(_range.second - _range.first);
+  _y_scale  = std::abs(_max_y - _min_y);
+  _npoints = renderArea.w * WTOP_RATIO;
+  
+  
 }
 
 void Plotter::calcData() {
   if (_range.first < 0) {
     _range.second += std::abs(_range.first);
     _range.first = 0;
-    if (_range.second > _wav_file->sampleSize)
-      _range->second = _wav_fileP->sampleSize;
+    if (_range.second > _model->wav->sampleSize)
+      _range.second = _model->wav->sampleSize;
   }
 
-  if (params.range->second > _wav_file->sampleSize) {
-    params.range->first -= (params.range->second - _wav_file->sampleSize);
-    params.range->second = _wav_file->sampleSize;
-    if (params.range->first < 0)
-      params.range->first = 0;
+  if (_range.second > _model->wav->sampleSize) {
+    _range.first -= (_range.second - _model->wav->sampleSize);
+    _range.second = _model->wav->sampleSize;
+    if (_range.first < 0)
+      _range.first = 0;
   }
 
   double delta =
-      (params.range->second - params.range->first) / (double)(params.npoints);
+      (_range.second - _range.first) / (double)(_npoints);
 
-  _wav_file->seekStart();
-  _wav_file->seek(params.range->first);
+  _model->wav->seekStart();
+  _model->wav->seek(_range.first);
 
-  for (int i = 0; i < params.npoints - 1; ++i) {
+  for (int i = 0; i < _npoints - 1; ++i) {
     double sample = 0.0;
-    _wav_file->readSample(&sample);
+    _model->wav->readSample(&sample);
     // std::cout << "read sample index " << params.range->first + (i+1) * delta
     // << " "; std::cout << "position : " << _wav_file->tell() << std::endl;
     //  std::cout << " of value " << sample << std::endl ;
     int cast_delta = i * delta;
-    _wav_file->seek((int)delta - 1);
+    _model->wav->seek((int)delta - 1);
     //_wav_file->seek((int)delta * (-1));
-    params.data->push_back({(int)params.range->first + cast_delta, sample});
+    _data.push_back({(int)_range.first + cast_delta, sample});
   }
 
-  _wav_file->seekStart(); // leave it as we got it!
+  _model->wav->seekStart(); // leave it as we got it!
 
-  *params.min_y = -1.25;
-  *params.max_y = 1.25;
-  std::cout << "generated v of size: " << params.data->size() << std::endl;
+  _min_y = -1.25;
+  _max_y = 1.25;
+  std::cout << "generated v of size: " << _data.size() << std::endl;
 }
-*//*
+/*
 void Plotter::zoom(double ratio) {
 
   double adj_ratio = (_range->second - _range->first) * ratio;
@@ -95,7 +97,7 @@ void Plotter::shift(double ratio) {
   _x_scale = std::abs(_range->second - _range->first);
   _y_scale = std::abs(_max_y - _min_y);
 }
-
+*/
 double Plotter::scaleX(double x) {
   // TODO, add logarithmic scale
   return ((x - _range.first) / (_x_scale) * (_renderArea.w - AXIS_WIDTH)) +
@@ -116,8 +118,8 @@ inline std::string doubleToString(double x, int precision) {
 void Plotter::componentRender() {
   // draw axis
   if (_data.empty()) {
-    sendRecalcEvent();
-    return;
+    
+    calcData();
   }
   SDL_Color c = {0, 0, 255, 255};
   setColor(c);
@@ -131,12 +133,13 @@ void Plotter::componentRender() {
   setColor(c);
 
   for (auto it = _data.begin(); it < _data.end() - 1; ++it) {
-    // std::cout << "original x : " << it->first << " scaled x : " <<
+    //std::cout << "original x : " << it->first << " scaled x : " <<
     // scaleX(it->first) << std::endl;
+    //std::cout << it->first << " " << it->second << std::endl;
     drawLineAA(scaleX(it->first), scaleY(it->second), scaleX((it + 1)->first),
                scaleY((it + 1)->second), {0, 0, 255, 255});
   }
 }
 
 void Plotter::feedEvent(SDL_Event *e) {}
-*/
+
