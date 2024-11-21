@@ -5,6 +5,7 @@
 
 View::View(Model *model) {
   this->model = model;
+  
   if (SDL_Init(SDL_INIT_VIDEO) < 0)
     std::cout << "error init" << std::endl;
   window = SDL_CreateWindow("Test", SDL_WINDOWPOS_UNDEFINED,
@@ -12,12 +13,15 @@ View::View(Model *model) {
   if (!window)
     std::cout << "failed to open window" << std::endl;
   renderer = SDL_CreateRenderer(window, -1, 0);
+  Component::_model = model; // static 
+  Component::_renderer = renderer; // static
+
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   components = std::vector<Component*>();
   SDL_Rect renderArea = {50, 50, 100, 100};
   SDL_Color green = {0, 255, 0, 255}; // on color
   SDL_Color blue = {0, 0, 255, 255}; // off color
-  Box* b = new Box(renderArea, renderer, green, blue);
+  Box* b = new Box(renderArea, green, blue);
   components.push_back(b);
 
   for(auto c : components)

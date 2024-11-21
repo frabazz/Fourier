@@ -7,8 +7,10 @@
 
 #define FONT_DIR "../assets/default.ttf"
 
-Component::Component(SDL_Rect renderArea, SDL_Renderer *renderer) {
-  _renderer = renderer;
+Model* Component::_model = NULL;
+SDL_Renderer* Component::_renderer = NULL;
+
+Component::Component(SDL_Rect renderArea) {
   _renderArea = renderArea;
   _default_font = TTF_OpenFont(FONT_DIR, 200);
 }

@@ -1,21 +1,25 @@
+#include <iostream>
 #include "controller.hpp"
 #include "model.hpp"
 #include "view.hpp"
-int main(int argc, char *argv[]) {
-  /*
-  RenderHandler handler = RenderHandler(WIDTH, HEIGHT);
-  if(!handler.initSDL() || !handler.initWav(AUDIO_FILE) || !handler.initComponents())
-    return -1;
+#include "audio/wave.hpp"
 
-  bool quit = false;
-  while(!quit){
-    handler.renderLoop(&quit);
+int main(int argc, char *argv[]) {
+  
+  if(argc < 2){
+    std::cout << "No wav file argument provided" << std::endl;
+    return -1;
+  }
+
+  Wave::WaveFile wav = Wave::WaveFile(argv[1]);
+  if(!wav.open()){
+    std::cout << "error opening wav file" << std::endl;
+    return -1;
   }
   
-  return 0;
-  */
-  Model m = Model();
+  Model m = Model(&wav);
   View v = View(&m);
   Controller c = Controller(&v, &m);
   c.run();
+  return 0;
 }

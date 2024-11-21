@@ -11,9 +11,9 @@ private:
   bool focused;
 
 public:
-  Box(SDL_Rect renderArea, SDL_Renderer *renderer, SDL_Color on_color,
+  Box(SDL_Rect renderArea , SDL_Color on_color,
       SDL_Color off_color)
-      : Component(renderArea, renderer) {
+      : Component(renderArea) {
     focused = false;
     _on_color = on_color;
     _off_color = off_color;

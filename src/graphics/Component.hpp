@@ -2,6 +2,7 @@
 #define GRAPHIC_COMPONENT_H
 
 #include "../utils/observer.hpp"
+#include "../model.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <string>
@@ -10,14 +11,15 @@
 
 class Component : public IListener<SDL_Event *> {
 public:
-  Component(SDL_Rect renderArea, SDL_Renderer *renderer);
+  static Model* _model;
+  static SDL_Renderer *_renderer;
+  Component(SDL_Rect renderArea);
   void render();
   virtual ~Component() = default;
 private:
   void update(SDL_Event* ev) override;
-protected:
+protected:  
   SDL_Rect _renderArea;
-  SDL_Renderer *_renderer;
   TTF_Font *_default_font;
 
   // rendering primitives
