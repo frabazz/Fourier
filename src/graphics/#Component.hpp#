@@ -15,7 +15,6 @@ public:
   
   static Model* _model;
   static SDL_Renderer *_renderer;
-
   
   Component(SDL_Rect renderArea);
   void render();

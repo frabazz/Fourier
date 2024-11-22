@@ -1,0 +1,28 @@
+#define FONT_DIR ""
+
+#include "Component.hpp"
+#include <string>
+#include <SDL_ttf.h>
+#include <map>
+
+#ifndef F_TEXT
+#define F_TEXT
+
+class Text : public Component{
+public:
+  static std::map<int, TTF_Font*>* font_cache; // indexed by font size;
+  Text(std::string text, int font_size, SDL_Color color);
+  void setText(std::string text);
+  void setFontSize(int font_size);
+  void setColor(SDL_Color color);
+private:
+  std::string _text;
+  int _font_size;
+  TTF_Font* _font;
+  SDL_Texture* _texture;
+  SDL_Color _color;
+};
+
+
+
+#endif

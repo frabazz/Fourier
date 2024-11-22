@@ -11,9 +11,9 @@
 #include "Event.hpp"
 #include "Plotter.hpp"
 
-#define AXIS_WIDTH 3
+#define AXIS_WIDTH 2
 #define CROSS_SIZE 10
-#define WTOP_RATIO 0.5
+#define WTOP_RATIO 0.9
 
 Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
 
@@ -124,11 +124,16 @@ void Plotter::componentRender() {
   SDL_Color c = {0, 0, 255, 255};
   setColor(c);
 
-  SDL_Rect x_axis = {0, _renderArea.h - AXIS_WIDTH, _renderArea.w, AXIS_WIDTH};
-  SDL_Rect y_axis = {0, 0, AXIS_WIDTH, _renderArea.h - AXIS_WIDTH};
 
-  fillRect(&x_axis);
-  fillRect(&y_axis);
+  SDL_Rect down = {0, _renderArea.h - AXIS_WIDTH, _renderArea.w, AXIS_WIDTH};
+  SDL_Rect left = {0, 0, AXIS_WIDTH, _renderArea.h - AXIS_WIDTH};
+  SDL_Rect up = {0, 0, _renderArea.w, AXIS_WIDTH};
+  SDL_Rect right = {_renderArea.w - AXIS_WIDTH, 0, AXIS_WIDTH, _renderArea.h};
+
+  fillRect(&down);
+  fillRect(&left);
+  fillRect(&up);
+  fillRect(&right);
   // draw function
   setColor(c);
 

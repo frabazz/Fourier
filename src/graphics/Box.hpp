@@ -9,16 +9,7 @@ private:
   SDL_Color _on_color;
   SDL_Color _off_color;
   bool focused;
-
-public:
-  Box(SDL_Rect renderArea , SDL_Color on_color,
-      SDL_Color off_color)
-      : Component(renderArea) {
-    focused = false;
-    _on_color = on_color;
-    _off_color = off_color;
-  }
-
+  
   void componentRender() override {
     setColor(focused ? _on_color : _off_color);
     SDL_Rect rect = {0, 0, _renderArea.w, _renderArea.h};
@@ -39,6 +30,16 @@ public:
       //std::cout << focused << std::endl;
     }
   }
+  
+public:
+  Box(SDL_Rect renderArea , SDL_Color on_color,
+      SDL_Color off_color)
+      : Component(renderArea) {
+    focused = false;
+    _on_color = on_color;
+    _off_color = off_color;
+  }
+
 };
 
   
