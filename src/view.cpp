@@ -13,7 +13,7 @@ View::View(Model *model) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0)
     std::cout << "error init" << std::endl;
   window = SDL_CreateWindow("Test", SDL_WINDOWPOS_UNDEFINED,
-                            SDL_WINDOWPOS_UNDEFINED, 600, 600, 0);
+                            SDL_WINDOWPOS_UNDEFINED, 900, 700, 0);
   if (!window)
     std::cout << "failed to open window" << std::endl;
   renderer = SDL_CreateRenderer(window, -1, 0);
@@ -26,15 +26,16 @@ View::View(Model *model) {
   Component::_renderer = renderer; 
   Text::font_cache = new std::map<int, TTF_Font*>();
   
-  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+  //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   components = std::vector<Component*>();
   SDL_Rect renderArea = {0, 0, 50, 50};
   SDL_Color green = {0, 255, 0, 255}; // on color
   SDL_Color blue = {0, 0, 255, 255}; // off color
   //Box* b = new Box(renderArea, green, blue);
-  Plotter* plotter = new Plotter({100, 100, 300, 100}, {0, 1000});
-  Text* text = new Text(renderArea, "Test", 20, green);
-  components = {text, plotter};
+  Plotter* plotter = new Plotter({100, 100, 500, 200}, {0, model->wav->sampleSize});
+  Text* text = new Text(renderArea, "Test", 40, blue);
+  Text* text2 = new Text(renderArea, "Io sono PDOR, figlio di KMER", 40, blue);
+  components = {text2, plotter};
 
   for(auto c : components)
     this->addListener(c);

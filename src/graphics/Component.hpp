@@ -1,6 +1,8 @@
 #ifndef GRAPHIC_COMPONENT_H
 #define GRAPHIC_COMPONENT_H
 
+#define F_BOUNDARIES 1 // plot renderArea boundaries for debug
+
 #include "../utils/observer.hpp"
 #include "../model.hpp"
 #include <SDL2/SDL.h>
@@ -16,13 +18,15 @@ public:
   static Model* _model;
   static SDL_Renderer *_renderer;
 
+  SDL_Rect getRenderArea();
   
   Component(SDL_Rect renderArea);
   void render();
   virtual ~Component() = default;
 private:
   void update(SDL_Event* ev) override;
-protected:  
+protected:
+  SDL_Color _draw_color;
   SDL_Rect _renderArea;
   TTF_Font *_default_font;
 

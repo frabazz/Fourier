@@ -14,8 +14,9 @@ Text::Text(SDL_Rect renderArea, std::string text, int font_size, SDL_Color color
   auto it = font_cache->find(font_size);
   if (it == font_cache->end()) {
     _font = TTF_OpenFont(FONT_DIR, font_size);
-    if(_font)
+    if(!_font)
       std::cout << "error opening font" << std::endl;
+    (*font_cache)[font_size] = _font;
   } else
     _font = it->second;
 
@@ -28,7 +29,7 @@ Text::Text(SDL_Rect renderArea, std::string text, int font_size, SDL_Color color
   _texture = SDL_CreateTextureFromSurface(_renderer, surf);
   if(_texture == NULL)
     std::cout << "error creating texture" << std::endl;
-  
+  SDL_QueryTexture(_texture, NULL, NULL, &_renderArea.w, &_renderArea.h);
   SDL_FreeSurface(surf);
 }
 
@@ -42,17 +43,13 @@ void Text::regenTexture(){
   _texture = SDL_CreateTextureFromSurface(_renderer, surf);
   if(_texture == NULL)
     std::cout << "error creating texture" << std::endl;
+  SDL_QueryTexture(_texture, NULL, NULL, &_renderArea.w, &_renderArea.h);
   SDL_FreeSurface(surf);
   
 }
 
-
-
-
 void Text::componentRender(){
-  SDL_Rect render_rect = _renderArea;
-  SDL_QueryTexture(_texture, NULL, NULL, &_renderArea.w, &_renderArea.h);
-  SDL_RenderCopy(_renderer, _texture, NULL, &render_rect);
+  SDL_RenderCopy(_renderer, _texture, NULL, &_renderArea);
 }
 
 void Text::setColor(SDL_Color color){

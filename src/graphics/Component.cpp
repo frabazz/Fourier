@@ -7,10 +7,11 @@
 
 #define FONT_DIR "../assets/default.ttf"
 
-Model* Component::_model = NULL;
-SDL_Renderer* Component::_renderer = NULL;
+Model *Component::_model = NULL;
+SDL_Renderer *Component::_renderer = NULL;
 
 Component::Component(SDL_Rect renderArea) {
+  _draw_color = {0, 0, 0, 0};
   _renderArea = renderArea;
   _default_font = TTF_OpenFont(FONT_DIR, 200);
 }
@@ -148,12 +149,20 @@ void Component::drawToolTip(std::string text, SDL_Rect *area,
 }
 
 void Component::setColor(SDL_Color c) {
+  _draw_color = c;
   SDL_SetRenderDrawColor(_renderer, c.r, c.g, c.b, c.a);
 }
 
 void Component::render() {
-  // do stuff, TODO viewport
   componentRender();
+
+  if (F_BOUNDARIES) {
+    SDL_Rect area = {0, 0, _renderArea.w, _renderArea.h};
+    SDL_Color old = _draw_color;
+    setColor({0, 255, 0, 255});
+    drawRect(&area);
+    setColor(old);
+  }
 }
 
 void Component::update(SDL_Event *ev) {
@@ -165,4 +174,8 @@ void Component::update(SDL_Event *ev) {
       return;
       }*/
   feedEvent(ev);
+}
+
+SDL_Rect Component::getRenderArea(){
+  return _renderArea;
 }
