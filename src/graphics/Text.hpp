@@ -2,7 +2,7 @@
 
 #include "Component.hpp"
 #include <string>
-#include <SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 #include <map>
 
 #ifndef F_TEXT

@@ -2,13 +2,13 @@
 #include <SDL_keycode.h>
 #include <SDL_mouse.h>
 
-#include <climits>
+
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "Event.hpp"
+#include "colors.hpp"
 #include "Plotter.hpp"
 
 #define AXIS_WIDTH 2
@@ -50,7 +50,7 @@ Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
 
   for (int i = 0; i < NMARKS; ++i) {
     posx = AXIS_WIDTH * 2 + _renderArea.x + i * _renderArea.w / NMARKS;
-    Text *t = new Text({posx, posy}, "0.5", MARK_FONT_SIZE, {0, 0, 255, 255});
+    Text *t = new Text({posx, posy}, "0.5", MARK_FONT_SIZE, Color::BLUE);
     _marks[i] = {0, t};
   }
 }
@@ -158,8 +158,8 @@ void Plotter::componentRender() {
     calcData();
     _first_render = false;
   }
-  SDL_Color c = {0, 0, 255, 255};
-  setColor(c);
+
+  setColor(Color::BLUE);
 
   SDL_Rect down = {0, _frame.h - AXIS_WIDTH, _frame.w, AXIS_WIDTH};
   SDL_Rect left = {0, 0, AXIS_WIDTH, _frame.h - AXIS_WIDTH};
@@ -171,7 +171,7 @@ void Plotter::componentRender() {
   fillRect(&up);
   fillRect(&right);
   // draw function
-  setColor(c);
+
 
   for (auto it = _data_coordinates.begin(); it < _data_coordinates.end() - 1;
        ++it) {
@@ -179,7 +179,7 @@ void Plotter::componentRender() {
     //  scaleX(it->first) << std::endl;
     // std::cout << it->first << " " << it->second << std::endl;
     drawLineAA(it->first, it->second, (it + 1)->first, (it + 1)->second,
-               {0, 0, 255, 255});
+               Color::ORANGE);
   }
 
   for(auto m : _marks)

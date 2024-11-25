@@ -1,6 +1,6 @@
 #include "Text.hpp"
 
-#include <SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 #include <iostream>
 
 std::map<int, TTF_Font *> *Text::font_cache = NULL;

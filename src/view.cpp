@@ -3,7 +3,8 @@
 #include "Plotter.hpp"
 #include "graphics/Box.hpp"
 #include "graphics/Text.hpp"
-#include <SDL_ttf.h>
+#include "graphics/colors.hpp"
+#include <SDL2/SDL_ttf.h>
 #include "view.hpp"
 #include <map>
 
@@ -29,12 +30,10 @@ View::View(Model *model) {
   //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   components = std::vector<Component*>();
   SDL_Rect renderArea = {0, 0, 50, 50};
-  SDL_Color green = {0, 255, 0, 255}; // on color
-  SDL_Color blue = {0, 0, 255, 255}; // off color
   //Box* b = new Box(renderArea, green, blue);
   Plotter* plotter = new Plotter({100, 100, 500, 200}, {0, model->wav->sampleSize});
-  Text* text = new Text(renderArea, "Test", 40, blue);
-  Text* text2 = new Text(renderArea, "Io sono PDOR, figlio di KMER", 40, blue);
+  Text* text = new Text(renderArea, "Test", 40, Color::BLUE);
+  Text* text2 = new Text(renderArea, "Io sono PDOR, figlio di KMER", 40, Color::BLUE);
   components = {text2, plotter};
 
   for(auto c : components)
