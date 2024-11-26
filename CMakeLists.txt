@@ -6,7 +6,7 @@ find_package(SDL2 REQUIRED)
 
 set(CMAKE_BUILD_TYPE Debug)
 set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(CMAKE_CXX_FLAGS_DEBUG  "-g -lSDL2_ttf")
+set(CMAKE_CXX_FLAGS_DEBUG  "-g -O0 -lSDL2_ttf")
 set(CMAKE_CXX_FLAGS "-lSDL2_ttf")
 file(GLOB_RECURSE SOURCE_FILES "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.hpp")
 

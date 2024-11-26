@@ -1,5 +1,0 @@
-#include "Text.hpp"
-
-std::map<int, TTF_Font*>* Text::font_cache = NULL;;
-
-Text::Text()

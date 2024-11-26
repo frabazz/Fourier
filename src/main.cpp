@@ -16,6 +16,8 @@ int main(int argc, char *argv[]) {
     std::cout << "error opening wav file" << std::endl;
     return -1;
   }
+
+  wav.printInfo();
   
   Model m = Model(&wav);
   View v = View(&m);

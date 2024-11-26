@@ -2,30 +2,30 @@
 #include <SDL_keycode.h>
 #include <SDL_mouse.h>
 
-
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "colors.hpp"
 #include "Plotter.hpp"
+#include "colors.hpp"
 
 #define AXIS_WIDTH 2
 #define CROSS_SIZE 10
-#define WTOP_RATIO 0.9 // renderArea width to number of points ratio
+#define WTOP_RATIO 0.4  // renderArea width to number of points ratio
 #define HTOF_RATIO 0.85 // renderArea height to frame heigth ratio
-#define NMARKS 6       // number of marks
+#define NMARKS 6        // number of marks
 #define MARK_DIGITS 4
 #define MARK_FONT_SIZE 15
 
 std::string toLimitedString(float value) {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(1) << value;
-    std::string result = oss.str();
-    result.erase(result.find_last_not_of('0') + 1); // Rimuove zeri finali
-    if (result.back() == '.') result.pop_back();    // Rimuove il punto finale
-    return result;
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(1) << value;
+  std::string result = oss.str();
+  result.erase(result.find_last_not_of('0') + 1); // Rimuove zeri finali
+  if (result.back() == '.')
+    result.pop_back(); // Rimuove il punto finale
+  return result;
 }
 
 Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
@@ -72,10 +72,10 @@ void Plotter::calcData() {
   }
 
   double delta = (_range.second - _range.first) / (double)(_npoints);
-
   _model->wav->seekStart();
   _model->wav->seek(_range.first);
   int mark_index = 0;
+  std::cout << "calculating data" << std::endl;
   for (int i = 0; i < _npoints - 1; ++i) {
     double sample = 0.0;
     _model->wav->readSample(&sample);
@@ -85,16 +85,21 @@ void Plotter::calcData() {
     int cast_delta = i * delta;
     _model->wav->seek((int)delta - 1);
     //_wav_file->seek((int)delta * (-1));
-    
-    //TODO: remove array access?
+
+    // TODO: remove array access?
     _data[i] = {(int)_range.first + cast_delta, sample};
     _data_coordinates[i] = {scaleX(_data[i].first), scaleY(_data[i].second)};
-    if(mark_index < NMARKS){
+    if (mark_index < NMARKS) {
       SDL_Rect text_area = _marks[mark_index].text->getRenderArea();
-      if(_data_coordinates[i].first > text_area.x + text_area.w/2.0 - _renderArea.w){
-	_marks[mark_index].time = _data[i].first / 44000.0; // TODO: get actual sample rate
-	_marks[mark_index].text->setText(toLimitedString(_marks[mark_index].time) + "s");
-	mark_index++;
+
+      if (_renderArea.x + _data_coordinates[i].first >
+          text_area.x + text_area.w / 2.0) {
+        std::cout << i << "/" << _npoints << std::endl;
+        _marks[mark_index].time =
+            _data[i].first / 44000.0; // TODO: get actual sample rate
+        _marks[mark_index].text->setText(
+            toLimitedString(_marks[mark_index].time) + "s");
+        mark_index++;
       }
     }
   }
@@ -172,7 +177,6 @@ void Plotter::componentRender() {
   fillRect(&right);
   // draw function
 
-
   for (auto it = _data_coordinates.begin(); it < _data_coordinates.end() - 1;
        ++it) {
     // std::cout << "original x : " << it->first << " scaled x : " <<
@@ -182,13 +186,13 @@ void Plotter::componentRender() {
                Color::ORANGE);
   }
 
-  for(auto m : _marks)
+  for (auto m : _marks)
     m.text->render();
 }
 
 void Plotter::feedEvent(SDL_Event *e) {}
 
 Plotter::~Plotter() {
-  for(auto m : _marks)
+  for (auto m : _marks)
     delete m.text;
 }
