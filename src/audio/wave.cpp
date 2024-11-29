@@ -126,6 +126,7 @@ void WaveFile::readSample(double* psample){
     }
 }
 
+//move to file pointer to the amount of sample specified by the paramater from current position 
 void WaveFile::seek(int samples){
     if(subChunk1.bitsPerSample == 8)
         file.seekg(samples * subChunk1.numChannels * sizeof(int8_t), ios::cur);

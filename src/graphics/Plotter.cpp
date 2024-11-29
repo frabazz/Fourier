@@ -12,7 +12,7 @@
 
 #define AXIS_WIDTH 2
 #define CROSS_SIZE 10
-#define WTOP_RATIO 0.4  // renderArea width to number of points ratio
+#define WTOP_RATIO 0.8  // renderArea width to number of points ratio
 #define HTOF_RATIO 0.85 // renderArea height to frame heigth ratio
 #define NMARKS 6        // number of marks
 #define MARK_DIGITS 4
@@ -37,8 +37,8 @@ Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
   int frame_height = _renderArea.h * HTOF_RATIO;
   _npoints = renderArea.w * WTOP_RATIO;
   _frame = {_renderArea.x, _renderArea.y, _renderArea.w, frame_height};
-  _data = std::vector<dpair>(_npoints - 1);
-  _data_coordinates = std::vector<dpair>(_npoints - 1);
+  _data = std::vector<dpair>(_npoints);
+  _data_coordinates = std::vector<dpair>(_npoints);
   _marks = std::vector<mark>(NMARKS);
   _x_scale = std::abs(_range.second - _range.first);
   _y_scale = std::abs(_max_y - _min_y);
@@ -56,7 +56,6 @@ Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
 }
 
 void Plotter::calcData() {
-
   if (_range.first < 0) {
     _range.second += std::abs(_range.first);
     _range.first = 0;
@@ -71,11 +70,26 @@ void Plotter::calcData() {
       _range.first = 0;
   }
 
-  double delta = (_range.second - _range.first) / (double)(_npoints);
+  int range_samples = _range.second - _range.first + 1;
+  int delta = range_samples / _npoints;
   _model->wav->seekStart();
   _model->wav->seek(_range.first);
   int mark_index = 0;
   std::cout << "calculating data" << std::endl;
+
+
+  int curr_sample = _range.first;
+  double sample = 0.0;
+  for(int i = 0;i < _npoints; ++i){
+    _model->wav->readSample(&sample);
+    _model->wav->seek(delta);
+    _data[i] = {curr_sample, sample};
+    _data_coordinates[i] = {scaleX(_data[i].first), scaleY(_data[i].second)};
+    curr_sample += delta;
+    
+  }
+  std::cout << curr_sample << std::endl;
+  /*
   for (int i = 0; i < _npoints - 1; ++i) {
     double sample = 0.0;
     _model->wav->readSample(&sample);
@@ -103,6 +117,7 @@ void Plotter::calcData() {
       }
     }
   }
+  */
 
   _model->wav->seekStart(); // leave it as we got it!
 
@@ -142,8 +157,8 @@ void Plotter::shift(double ratio) {
 */
 double Plotter::scaleX(double x) {
   // TODO, add logarithmic scale
-  return ((x - _range.first) / (_x_scale) * (_frame.w - AXIS_WIDTH)) +
-         AXIS_WIDTH;
+  return ((x - _range.first + 1) / (_x_scale) * _frame.w) +
+    AXIS_WIDTH;
 }
 
 double Plotter::scaleY(double y) {
@@ -176,14 +191,14 @@ void Plotter::componentRender() {
   fillRect(&up);
   fillRect(&right);
   // draw function
-
+  setColor(Color::ORANGE);
   for (auto it = _data_coordinates.begin(); it < _data_coordinates.end() - 1;
        ++it) {
     // std::cout << "original x : " << it->first << " scaled x : " <<
     //  scaleX(it->first) << std::endl;
-    // std::cout << it->first << " " << it->second << std::endl;
-    drawLineAA(it->first, it->second, (it + 1)->first, (it + 1)->second,
-               Color::ORANGE);
+    //std::cout << it->first << " " << it->second << std::endl;
+    drawLine(it->first, it->second, (it + 1)->first, (it + 1)->second
+	     /*Color::ORANGE*/);
   }
 
   for (auto m : _marks)

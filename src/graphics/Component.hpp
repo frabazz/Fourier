@@ -1,7 +1,7 @@
 #ifndef GRAPHIC_COMPONENT_H
 #define GRAPHIC_COMPONENT_H
 
-#define F_BOUNDARIES 1 // plot renderArea boundaries for debug
+#define F_BOUNDARIES 0 // plot renderArea boundaries for debug
 
 #include "../utils/observer.hpp"
 #include "../model.hpp"
