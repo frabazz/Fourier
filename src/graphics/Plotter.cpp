@@ -18,6 +18,7 @@
 #define MARK_DIGITS 4
 #define MARK_FONT_SIZE 15
 
+
 std::string toLimitedString(float value) {
   std::ostringstream oss;
   oss << std::fixed << std::setprecision(1) << value;
@@ -80,45 +81,25 @@ void Plotter::calcData() {
 
   int curr_sample = _range.first;
   double sample = 0.0;
+
   for(int i = 0;i < _npoints; ++i){
     _model->wav->readSample(&sample);
     _model->wav->seek(delta);
     _data[i] = {curr_sample, sample};
-    _data_coordinates[i] = {scaleX(_data[i].first), scaleY(_data[i].second)};
+    _data_coordinates[i] = {
+      ((double)(i) / (double)_npoints) * (_frame.w - AXIS_WIDTH) + AXIS_WIDTH,
+      (((1 - (_data[i].second - _min_y) / (_y_scale)) * (_frame.h - AXIS_WIDTH)))
+    };
     curr_sample += delta;
-    
   }
-  std::cout << curr_sample << std::endl;
-  /*
-  for (int i = 0; i < _npoints - 1; ++i) {
-    double sample = 0.0;
-    _model->wav->readSample(&sample);
-    // std::cout << "read sample index " << params.range->first + (i+1) * delta
-    // << " "; std::cout << "position : " << _wav_file->tell() << std::endl;
-    //  std::cout << " of value " << sample << std::endl ;
-    int cast_delta = i * delta;
-    _model->wav->seek((int)delta - 1);
-    //_wav_file->seek((int)delta * (-1));
 
-    // TODO: remove array access?
-    _data[i] = {(int)_range.first + cast_delta, sample};
-    _data_coordinates[i] = {scaleX(_data[i].first), scaleY(_data[i].second)};
-    if (mark_index < NMARKS) {
-      SDL_Rect text_area = _marks[mark_index].text->getRenderArea();
+  _data_coordinates[_npoints - 1].first = _frame.w - 2 * AXIS_WIDTH;
 
-      if (_renderArea.x + _data_coordinates[i].first >
-          text_area.x + text_area.w / 2.0) {
-        std::cout << i << "/" << _npoints << std::endl;
-        _marks[mark_index].time =
-            _data[i].first / 44000.0; // TODO: get actual sample rate
-        _marks[mark_index].text->setText(
-            toLimitedString(_marks[mark_index].time) + "s");
-        mark_index++;
-      }
-    }
-  }
-  */
-
+  /*std::printf("renderArea: {%d %d %d %d}\n", _renderArea.x, _renderArea.y, _renderArea.w, _renderArea.h);
+  std::printf("frame: {%d %d %d %d}\n", _frame.x, _frame.y, _frame.w  , _frame.h);
+  for(auto coord : _data_coordinates){
+    std::printf("coord: {%f, %f}\n", coord.first, coord.second);
+    }*/
   _model->wav->seekStart(); // leave it as we got it!
 
   _min_y = -1.25;
@@ -155,10 +136,11 @@ void Plotter::shift(double ratio) {
   _y_scale = std::abs(_max_y - _min_y);
 }
 */
-double Plotter::scaleX(double x) {
+double Plotter::scaleX(int i) {
+  return ((double)(i) / (double)_npoints) * (_frame.w ) + AXIS_WIDTH;
   // TODO, add logarithmic scale
-  return ((x - _range.first + 1) / (_x_scale) * _frame.w) +
-    AXIS_WIDTH;
+  /*return ((x - _range.first + 1) / (_x_scale) * _frame.w) +
+    AXIS_WIDTH;*/
 }
 
 double Plotter::scaleY(double y) {
@@ -197,8 +179,8 @@ void Plotter::componentRender() {
     // std::cout << "original x : " << it->first << " scaled x : " <<
     //  scaleX(it->first) << std::endl;
     //std::cout << it->first << " " << it->second << std::endl;
-    drawLine(it->first, it->second, (it + 1)->first, (it + 1)->second
-	     /*Color::ORANGE*/);
+    drawLineAA(it->first, it->second, (it + 1)->first, (it + 1)->second
+	       ,Color::ORANGE);
   }
 
   for (auto m : _marks)

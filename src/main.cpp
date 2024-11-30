@@ -3,6 +3,7 @@
 #include "model.hpp"
 #include "view.hpp"
 #include "audio/wave.hpp"
+#include "utils/conversions.hpp"
 
 int main(int argc, char *argv[]) {
   

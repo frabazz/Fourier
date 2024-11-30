@@ -31,7 +31,7 @@ View::View(Model *model) {
   components = std::vector<Component*>();
   SDL_Rect renderArea = {0, 0, 50, 50};
   //Box* b = new Box(renderArea, green, blue);
-  Plotter* plotter = new Plotter({100, 100, 500, 200}, {0, model->wav->sampleSize - 200});
+  Plotter* plotter = new Plotter({100, 100, 500, 200}, {0, model->wav->sampleSize/4});
   Text* text = new Text(renderArea, "Test", 40, Color::BLUE);
   Text* text2 = new Text(renderArea, "Io sono PDOR, figlio di KMER", 40, Color::BLUE);
   components = {text2, plotter};

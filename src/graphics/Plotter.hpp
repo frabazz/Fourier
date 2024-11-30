@@ -32,7 +32,7 @@ private:
   SDL_Rect _frame;
   
   void calcData();
-  double scaleX(double x);
+  double scaleX(int i);
   double scaleY(double y);
   void componentRender() override;
   void zoom(double ratio);
