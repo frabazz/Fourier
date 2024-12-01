@@ -4,42 +4,59 @@
 #include <SDL2/SDL.h>
 #include <vector>
 
-#include "Component.hpp"
 #include "../common.hpp"
+#include "Component.hpp"
+#include "Text.hpp"
+#include "../utils/TimeStamp.hpp"
 
-
-struct plotter_recalc_ev{
-  std::vector<dpair> *data;
-  double* min_y;
-  double* max_y;
-  dpair *range;
-  int npoints;
+struct mark {
+  TimeStamp* time;
+  Text* text;
 };
-    
 
 class Plotter : public Component {
 public:
-  Plotter(SDL_Rect *renderArea, SDL_Renderer *renderer, dpair *range,
-          spair *units);
+  const std::vector<int> mark_gaps = {
+    1,
+    5,
+    10,
+    25,
+    50,
+    100,
+    250,
+    500,
+    1000, // 1 second
+    2500,
+    5000,
+    10000,
+    15000,
+    30000, // 30 second
+    60000 // 1 minute
+  };
+  
+  Plotter(SDL_Rect renderArea, dpair range);
   void updateRange(dpair *new_range);
   void feedEvent(SDL_Event *e) override;
-
+  ~Plotter();
+  
 private:
-  dpair *_range;
+  bool _first_render;
+  dpair _range;
   std::vector<dpair> _data;
+  std::vector<dpair> _data_coordinates;
+  std::vector<mark> _marks;
   double _min_y, _max_y;
   double _x_scale, _y_scale;
-  bool _is_mouse_over;
-  int _mouse_x, _mouse_y;
-  SDL_Keycode _key_pressed;
-  spair *_units;
+  int _npoints;
+  SDL_Rect _frame;
 
-  void   sendRecalcEvent();
-  double scaleX(double x);
+  void calcMarks();
+  void calcData();
+  double scaleX(int i);
   double scaleY(double y);
-  void   componentRender() override;
-  void   zoom(double ratio);
-  void   shift(double ratio);
+  void componentRender() override;
+  void zoom(double ratio);
+  void shift(double ratio);
 };
 
 #endif

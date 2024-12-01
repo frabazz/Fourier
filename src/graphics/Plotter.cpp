@@ -2,52 +2,165 @@
 #include <SDL_keycode.h>
 #include <SDL_mouse.h>
 
-#include <climits>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "Event.hpp"
+#include "../utils/TimeStamp.hpp"
 #include "Plotter.hpp"
+#include "colors.hpp"
 
-#define AXIS_WIDTH 3
+#define AXIS_WIDTH 2
 #define CROSS_SIZE 10
-#define WTOP_RATIO 0.8
+#define WTOP_RATIO 0.8  // renderArea width to number of points ratio
+#define HTOF_RATIO 0.85 // renderArea height to frame heigth ratio
+#define NMARKS 6        // number of marks
+#define MARK_DIGITS 4
+#define MARK_FONT_SIZE 14
 
-Plotter::Plotter(SDL_Rect *renderArea, SDL_Renderer *renderer, dpair *range,    
-                 spair *units)
-    : Component(renderArea, renderer) {
+std::string toLimitedString(float value) {
+  std::ostringstream oss;
+  oss << std::fixed << std::setprecision(1) << value;
+  std::string result = oss.str();
+  result.erase(result.find_last_not_of('0') + 1); // Rimuove zeri finali
+  if (result.back() == '.')
+    result.pop_back(); // Rimuove il punto finale
+  return result;
+}
 
-  _units = units;
-
-  _is_mouse_over = false;
-  _mouse_x = 0;
-  _mouse_y = 0;
-  _key_pressed = SDLK_CLEAR;
+Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
+  _first_render = true;
   _range = range;
-  _max_y = 0;
-  _min_y = 0;
+  _max_y = 1.1;
+  _min_y = -1.1;
 
-  _data = std::vector<dpair>();
-  _x_scale = INT_MAX;
-  _y_scale = INT_MAX;
+  int frame_height = _renderArea.h * HTOF_RATIO;
+  _npoints = renderArea.w * WTOP_RATIO;
+  _frame = {_renderArea.x, _renderArea.y, _renderArea.w, frame_height};
+  _data = std::vector<dpair>(_npoints);
+  _data_coordinates = std::vector<dpair>(_npoints);
+  _marks = std::vector<mark>(NMARKS);
+  _x_scale = std::abs(_range.second - _range.first);
+  _y_scale = std::abs(_max_y - _min_y);
+
+  Text t = Text({0, 0}, "42", MARK_FONT_SIZE, {0, 0, 0});
+  int posy = _renderArea.y + _frame.h + (_renderArea.h * (1 - HTOF_RATIO) / 2) -
+             ((float)t.getRenderArea().h) / 2;
+
+  for (int i = 0; i < NMARKS; ++i) {
+    _marks[i] = {new TimeStamp(0.0),
+                 new Text({0, posy}, "42", MARK_FONT_SIZE, Color::WHITE)};
+  }
 }
 
-void Plotter::sendRecalcEvent() {
+void Plotter::calcData() {
+  if (_range.first < 0) {
+    _range.second += std::abs(_range.first);
+    _range.first = 0;
+    if (_range.second > _model->wav->sampleSize)
+      _range.second = _model->wav->sampleSize;
+  }
 
-  plotter_recalc_ev *recalc_ev = new plotter_recalc_ev;
-  *recalc_ev = {&_data, &_min_y, &_max_y, _range,
-                (int)(WTOP_RATIO * _renderArea->w)};
+  if (_range.second > _model->wav->sampleSize) {
+    _range.first -= (_range.second - _model->wav->sampleSize);
+    _range.second = _model->wav->sampleSize;
+    if (_range.first < 0)
+      _range.first = 0;
+  }
 
-  SDL_Event ev;
-  ev.type = SDL_USEREVENT;
-  ev.user.code = PLOTTER_RECALC;
-  ev.user.data1 = (void *)recalc_ev;
+  int range_samples = _range.second - _range.first + 1;
+  int delta = range_samples / _npoints;
+  _model->wav->seekStart();
+  _model->wav->seek(_range.first);
+  int mark_index = 0;
+  std::cout << "calculating data" << std::endl;
 
-  SDL_PushEvent(&ev);
+  int curr_sample = _range.first;
+  double sample = 0.0;
+
+  for (int i = 0; i < _npoints; ++i) {
+    _model->wav->readSample(&sample);
+    _model->wav->seek(delta);
+    _data[i] = {curr_sample, sample};
+    _data_coordinates[i] = {
+        ((double)(i) / (double)_npoints) * (_frame.w - AXIS_WIDTH) + AXIS_WIDTH,
+        (((1 - (_data[i].second - _min_y) / (_y_scale)) *
+          (_frame.h - AXIS_WIDTH)))};
+    curr_sample += delta;
+  }
+
+  _data_coordinates[_npoints - 1].first = _frame.w - 2 * AXIS_WIDTH;
+  calcMarks();
+  _model->wav->seekStart(); // leave it as we got it!
+
+  _min_y = -1.1;
+  _max_y = 1.1;
+  std::cout << "generated v of size: " << _data.size() << std::endl;
 }
 
+void Plotter::calcMarks() {
+
+  int sampleRate = 44100; // TODO: get actual sample rate
+  _marks[0].time->fromSeconds((double)_data[0].first / (double)sampleRate);
+  _marks[NMARKS - 1].time->fromSeconds((double)_data[_npoints - 1].first /
+                                       (double)sampleRate);
+  TimeStamp::string_format format = _marks[NMARKS - 1].time->getDefaultFormat();
+  double diff =
+      (_marks[NMARKS - 1].time->toSeconds() - _marks[0].time->toSeconds()) *
+      1000;
+  int gap = 0;
+  double n = 1;
+  for (auto it = mark_gaps.end() - 1; it >= mark_gaps.begin(); --it) {
+    n = diff / *it;
+    if (n > NMARKS - 2) {
+      gap = *it;
+      break;
+    }
+  }
+
+  if (n == 0) {
+    std::cout << "Plotter render error, no gaps found" << std::endl;
+    return;
+  }
+
+  double delta = (double)n / (double)(NMARKS - 2);
+  // no * (gap+1) because of the 0 edge case
+  int start_t = (((int)(_marks[0].time->toSeconds() * 1000) / gap) * gap) + gap;
+  int end_t =
+      (((int)(_marks[NMARKS - 1].time->toSeconds() * 1000) / gap) * gap);
+  int curr_t = start_t;
+  double j = 0;
+
+  for (int i = 1; i < NMARKS - 1; ++i) {
+    _marks[i].time->fromSeconds((double)curr_t / 1000.0);
+    j += delta;
+    /*
+      sometimes curr_t == old(curr_t) and some marks could be in the same
+      position and be rendered as one. Its not a problem and the graphic result
+      is better (it's not a bug, it's a feature!)
+     */
+    curr_t = std::round(j) * gap;
+  }
+
+  for (int i = 0; i < NMARKS; ++i) {
+    std::cout << _marks[i].time->toString(format) << " ";
+    double p =
+        (_marks[i].time->toSeconds() - _marks[0].time->toSeconds()) /
+        (_marks[NMARKS - 1].time->toSeconds() - _marks[0].time->toSeconds());
+
+    /*
+    Text should be set before position calculation because text length affects
+    component width
+   */
+    _marks[i].text->setText(_marks[i].time->toString(format));
+    _marks[i].text->_renderArea.x = _frame.x + p * (double)(_frame.w) -
+                                    (double)_marks[i].text->_renderArea.w / 2.0;
+  }
+  std::cout << std::endl;
+}
+
+/*
 void Plotter::zoom(double ratio) {
 
   double adj_ratio = (_range->second - _range->first) * ratio;
@@ -76,16 +189,17 @@ void Plotter::shift(double ratio) {
   _x_scale = std::abs(_range->second - _range->first);
   _y_scale = std::abs(_max_y - _min_y);
 }
-
-double Plotter::scaleX(double x) {
+*/
+double Plotter::scaleX(int i) {
+  return ((double)(i) / (double)_npoints) * (_frame.w) + AXIS_WIDTH;
   // TODO, add logarithmic scale
-  return ((x - _range->first) / (_x_scale) * (_renderArea->w - AXIS_WIDTH)) +
-         AXIS_WIDTH;
+  /*return ((x - _range.first + 1) / (_x_scale) * _frame.w) +
+    AXIS_WIDTH;*/
 }
 
 double Plotter::scaleY(double y) {
   // TODO, add logarithmic scale
-  return (((1 - (y - _min_y) / (_y_scale)) * (_renderArea->h - AXIS_WIDTH)));
+  return (((1 - (y - _min_y) / (_y_scale)) * (_frame.h - AXIS_WIDTH)));
 }
 
 inline std::string doubleToString(double x, int precision) {
@@ -96,83 +210,40 @@ inline std::string doubleToString(double x, int precision) {
 
 void Plotter::componentRender() {
   // draw axis
-   if(_data.empty()) {
-    sendRecalcEvent();
-    return;
-   }
-  SDL_Color c = {0, 0, 255, 255};
-  setColor(c);
+  if (_first_render) {
+    calcData();
+    _first_render = false;
+  }
 
-  SDL_Rect x_axis = {0, _renderArea->h - AXIS_WIDTH, _renderArea->w,
-                     AXIS_WIDTH};
-  SDL_Rect y_axis = {0, 0, AXIS_WIDTH, _renderArea->h - AXIS_WIDTH};
+  setColor(Color::BLUE);
 
-  fillRect(&x_axis);
-  fillRect(&y_axis);
+  SDL_Rect down = {0, _frame.h - AXIS_WIDTH, _frame.w, AXIS_WIDTH};
+  SDL_Rect left = {0, 0, AXIS_WIDTH, _frame.h - AXIS_WIDTH};
+  SDL_Rect up = {0, 0, _frame.w, AXIS_WIDTH};
+  SDL_Rect right = {_frame.w - AXIS_WIDTH, 0, AXIS_WIDTH, _frame.h};
+
+  fillRect(&down);
+  fillRect(&left);
+  fillRect(&up);
+  fillRect(&right);
   // draw function
-  setColor(c);
-
-  for (auto it = _data.begin(); it < _data.end() - 1; ++it) {
+  setColor(Color::ORANGE);
+  for (auto it = _data_coordinates.begin(); it < _data_coordinates.end() - 1;
+       ++it) {
     // std::cout << "original x : " << it->first << " scaled x : " <<
-    // scaleX(it->first) << std::endl;
-    drawLineAA(scaleX(it->first), scaleY(it->second), scaleX((it + 1)->first),
-	       scaleY((it + 1)->second), {0, 0, 255, 255});
+    //  scaleX(it->first) << std::endl;
+    // std::cout << it->first << " " << it->second << std::endl;
+    drawLineAA(it->first, it->second, (it + 1)->first, (it + 1)->second,
+               Color::ORANGE);
   }
 
-  // draw cross and tooltip
-  if (_is_mouse_over) {
-    SDL_RenderDrawLine(_renderer, _mouse_x, _mouse_y - CROSS_SIZE, _mouse_x,
-                       _mouse_y + CROSS_SIZE);
-    SDL_RenderDrawLine(_renderer, _mouse_x - CROSS_SIZE, _mouse_y,
-                       _mouse_x + CROSS_SIZE, _mouse_y);
-    SDL_Rect area = {_mouse_x + CROSS_SIZE, _mouse_y + CROSS_SIZE, 200, 20};
-
-    double index_percentage =
-        static_cast<double>(_mouse_x - _renderArea->x - AXIS_WIDTH) /
-        static_cast<double>(_renderArea->w - AXIS_WIDTH);
-    int index =
-        std::floor(index_percentage * static_cast<double>(_data.size() - 1));
-    std::string text =
-        doubleToString(_data[index].first, 2) + " " + _units->first + ", " +
-        doubleToString(_data[index].second, 2) + " " + _units->second;
-
-    drawToolTip(text, &area, {0, 0, 255});
-  }
-
-  switch (_key_pressed) {
-  case SDLK_RIGHT:
-    shift(0.1);
-    break;
-  case SDLK_LEFT:
-    shift(-0.1);
-    break;
-  case SDLK_PLUS:
-    zoom(0.1);
-    break;
-  case SDLK_MINUS:
-    zoom(-0.1);
-    break;
-  }
-
-  _key_pressed = SDLK_CLEAR;
+  for (auto m : _marks)
+    m.text->render();
 }
 
-void Plotter::feedEvent(SDL_Event *e) {
-  if (e->type == SDL_MOUSEMOTION) {
-    _mouse_x = e->motion.x;
-    _mouse_y = e->motion.y;
+void Plotter::feedEvent(SDL_Event *e) {}
 
-    if (_mouse_x > _renderArea->x + AXIS_WIDTH &&
-        _mouse_x < _renderArea->x + _renderArea->w &&
-        _mouse_y > _renderArea->y &&
-        _mouse_y < _renderArea->y + _renderArea->h - AXIS_WIDTH)
-      _is_mouse_over = true;
-    else
-      _is_mouse_over = false;
-  } else if (e->type == SDL_KEYDOWN) {
-    _key_pressed = e->key.keysym.sym;
-  } else if (e->type == SDL_USEREVENT && e->user.code == PLOTTER_RECALC) {
-    _x_scale = std::abs(_range->second - _range->first);
-    _y_scale = std::abs(_max_y - _min_y);
-  }
+Plotter::~Plotter() {
+  for (auto m : _marks)
+    delete m.text;
 }
