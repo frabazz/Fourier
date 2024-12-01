@@ -7,18 +7,17 @@
 #include <sstream>
 #include <string>
 
+#include "../utils/TimeStamp.hpp"
 #include "Plotter.hpp"
 #include "colors.hpp"
-#include "../utils/TimeStamp.hpp"
 
 #define AXIS_WIDTH 2
 #define CROSS_SIZE 10
 #define WTOP_RATIO 0.8  // renderArea width to number of points ratio
 #define HTOF_RATIO 0.85 // renderArea height to frame heigth ratio
-#define NMARKS 10       // number of marks
+#define NMARKS 6        // number of marks
 #define MARK_DIGITS 4
 #define MARK_FONT_SIZE 14
-
 
 std::string toLimitedString(float value) {
   std::ostringstream oss;
@@ -33,8 +32,8 @@ std::string toLimitedString(float value) {
 Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
   _first_render = true;
   _range = range;
-  _max_y = 1.25;
-  _min_y = -1.25;
+  _max_y = 1.1;
+  _min_y = -1.1;
 
   int frame_height = _renderArea.h * HTOF_RATIO;
   _npoints = renderArea.w * WTOP_RATIO;
@@ -45,15 +44,13 @@ Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
   _x_scale = std::abs(_range.second - _range.first);
   _y_scale = std::abs(_max_y - _min_y);
 
-  int posx, posy;
-  Text t = Text({0, 0}, "1234", MARK_FONT_SIZE, {0, 0, 0});
-  posy = _renderArea.y + _frame.h + (_renderArea.h * (1 - HTOF_RATIO) / 2) -
-         ((float)t.getRenderArea().h) / 2;
+  Text t = Text({0, 0}, "42", MARK_FONT_SIZE, {0, 0, 0});
+  int posy = _renderArea.y + _frame.h + (_renderArea.h * (1 - HTOF_RATIO) / 2) -
+             ((float)t.getRenderArea().h) / 2;
 
   for (int i = 0; i < NMARKS; ++i) {
-    posx = AXIS_WIDTH * 2 + _renderArea.x + i * _renderArea.w / NMARKS - 1000;
-    Text *t = new Text({posx, posy}, "0.5", MARK_FONT_SIZE, Color::WHITE);
-    _marks[i] = {0, t};
+    _marks[i] = {new TimeStamp(0.0),
+                 new Text({0, posy}, "42", MARK_FONT_SIZE, Color::WHITE)};
   }
 }
 
@@ -79,79 +76,90 @@ void Plotter::calcData() {
   int mark_index = 0;
   std::cout << "calculating data" << std::endl;
 
-
   int curr_sample = _range.first;
   double sample = 0.0;
 
-  for(int i = 0;i < _npoints; ++i){
+  for (int i = 0; i < _npoints; ++i) {
     _model->wav->readSample(&sample);
     _model->wav->seek(delta);
     _data[i] = {curr_sample, sample};
     _data_coordinates[i] = {
-      ((double)(i) / (double)_npoints) * (_frame.w - AXIS_WIDTH) + AXIS_WIDTH,
-      (((1 - (_data[i].second - _min_y) / (_y_scale)) * (_frame.h - AXIS_WIDTH)))
-    };
+        ((double)(i) / (double)_npoints) * (_frame.w - AXIS_WIDTH) + AXIS_WIDTH,
+        (((1 - (_data[i].second - _min_y) / (_y_scale)) *
+          (_frame.h - AXIS_WIDTH)))};
     curr_sample += delta;
   }
 
-  _data_coordinates[_npoints - 1].first = _frame.w - 2*AXIS_WIDTH;
-  std::vector<TimeStamp*> t = std::vector<TimeStamp*>(NMARKS);
-  int sampleRate = 44100; //TODO: get actual sample rate
-  t[0] = new TimeStamp((double)_data[0].first / (double)sampleRate);
-  t[NMARKS - 1] = new TimeStamp((double)_data[_npoints - 1].first / (double)sampleRate);
-  TimeStamp::string_format format = t[NMARKS-1]->getDefaultFormat();
-  double diff = (t[NMARKS-1]->toSeconds() - t[0]->toSeconds()) * 1000;
-  int gap = 0; double n = 1;
-  for(auto it = mark_gaps.end() - 1; it >= mark_gaps.begin(); --it){
+  _data_coordinates[_npoints - 1].first = _frame.w - 2 * AXIS_WIDTH;
+  calcMarks();
+  _model->wav->seekStart(); // leave it as we got it!
+
+  _min_y = -1.1;
+  _max_y = 1.1;
+  std::cout << "generated v of size: " << _data.size() << std::endl;
+}
+
+void Plotter::calcMarks() {
+
+  int sampleRate = 44100; // TODO: get actual sample rate
+  _marks[0].time->fromSeconds((double)_data[0].first / (double)sampleRate);
+  _marks[NMARKS - 1].time->fromSeconds((double)_data[_npoints - 1].first /
+                                       (double)sampleRate);
+  TimeStamp::string_format format = _marks[NMARKS - 1].time->getDefaultFormat();
+  double diff =
+      (_marks[NMARKS - 1].time->toSeconds() - _marks[0].time->toSeconds()) *
+      1000;
+  int gap = 0;
+  double n = 1;
+  for (auto it = mark_gaps.end() - 1; it >= mark_gaps.begin(); --it) {
     n = diff / *it;
-    if(n > NMARKS){
+    if (n > NMARKS - 2) {
       gap = *it;
       break;
     }
   }
 
-  if(n == 0){
+  if (n == 0) {
     std::cout << "Plotter render error, no gaps found" << std::endl;
     return;
   }
 
-  double mark_delta = (double)n / (double)(NMARKS - 2);
-  std::cout << "n: " << n << std::endl;
-  std::cout << "chosen delta: " << mark_delta << std::endl;
-  //no * (gap+1) because of the 0 edge case
-  int start_t = (((int)(t[0]->toSeconds() * 1000) / gap) * gap) + gap;
-  int end_t = (((int)(t[NMARKS-1]->toSeconds() * 1000) / gap) * gap);
+  double delta = (double)n / (double)(NMARKS - 2);
+  // no * (gap+1) because of the 0 edge case
+  int start_t = (((int)(_marks[0].time->toSeconds() * 1000) / gap) * gap) + gap;
+  int end_t =
+      (((int)(_marks[NMARKS - 1].time->toSeconds() * 1000) / gap) * gap);
   int curr_t = start_t;
   double j = 0;
 
-  
-  for(int i = 1; i < NMARKS - 1; ++i){
-    t[i] = new TimeStamp((double)curr_t / 1000.0);
-    j += mark_delta;
-    curr_t = (int)j * gap; 
+  for (int i = 1; i < NMARKS - 1; ++i) {
+    _marks[i].time->fromSeconds((double)curr_t / 1000.0);
+    j += delta;
+    /*
+      sometimes curr_t == old(curr_t) and some marks could be in the same
+      position and be rendered as one. Its not a problem and the graphic result
+      is better (it's not a bug, it's a feature!)
+     */
+    curr_t = std::round(j) * gap;
   }
 
-  for(auto time : t){
-    std::printf("%s(%f)", time->toString().c_str(), time->toSeconds());
-  }
-  std::cout << std::endl;
-  
-  for(int i = 0;i < NMARKS; ++i){
-    double p = (t[i]->toSeconds() - t[0]->toSeconds()) / (t[NMARKS-1]->toSeconds() - t[0]->toSeconds());
-    std::cout << p << " ";
-    _marks[i].text->setText(t[i]->toString(format));
-    _marks[i].text->_renderArea.x =_frame.x + p * (double)(_frame.w) - (double)_marks[i].text->_renderArea.w /2.0;
-    
-  }
-  std::cout << std::endl;
-  
-  std::cout << std::endl;
-  _model->wav->seekStart(); // leave it as we got it!
+  for (int i = 0; i < NMARKS; ++i) {
+    std::cout << _marks[i].time->toString(format) << " ";
+    double p =
+        (_marks[i].time->toSeconds() - _marks[0].time->toSeconds()) /
+        (_marks[NMARKS - 1].time->toSeconds() - _marks[0].time->toSeconds());
 
-  _min_y = -1.25;
-  _max_y = 1.25;
-  std::cout << "generated v of size: " << _data.size() << std::endl;
+    /*
+    Text should be set before position calculation because text length affects
+    component width
+   */
+    _marks[i].text->setText(_marks[i].time->toString(format));
+    _marks[i].text->_renderArea.x = _frame.x + p * (double)(_frame.w) -
+                                    (double)_marks[i].text->_renderArea.w / 2.0;
+  }
+  std::cout << std::endl;
 }
+
 /*
 void Plotter::zoom(double ratio) {
 
@@ -183,7 +191,7 @@ void Plotter::shift(double ratio) {
 }
 */
 double Plotter::scaleX(int i) {
-  return ((double)(i) / (double)_npoints) * (_frame.w ) + AXIS_WIDTH;
+  return ((double)(i) / (double)_npoints) * (_frame.w) + AXIS_WIDTH;
   // TODO, add logarithmic scale
   /*return ((x - _range.first + 1) / (_x_scale) * _frame.w) +
     AXIS_WIDTH;*/
@@ -224,9 +232,9 @@ void Plotter::componentRender() {
        ++it) {
     // std::cout << "original x : " << it->first << " scaled x : " <<
     //  scaleX(it->first) << std::endl;
-    //std::cout << it->first << " " << it->second << std::endl;
-    drawLineAA(it->first, it->second, (it + 1)->first, (it + 1)->second
-	       ,Color::ORANGE);
+    // std::cout << it->first << " " << it->second << std::endl;
+    drawLineAA(it->first, it->second, (it + 1)->first, (it + 1)->second,
+               Color::ORANGE);
   }
 
   for (auto m : _marks)

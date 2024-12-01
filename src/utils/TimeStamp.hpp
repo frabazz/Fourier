@@ -29,6 +29,15 @@ public:
     this->m = this->m - (this->h * 60);
   }
 
+  
+  void fromSeconds(double seconds) {
+    this->m = (int)(seconds) / 60;
+    this->s = seconds - (this->m * 60);
+    this->h = this->m / 60;
+    this->m = this->m - (this->h * 60);
+  }
+
+  
   double toSeconds() {
     return (double)this->h * 3600 + (double)this->m * 60 + this->s;
   }

@@ -7,9 +7,10 @@
 #include "../common.hpp"
 #include "Component.hpp"
 #include "Text.hpp"
+#include "../utils/TimeStamp.hpp"
 
 struct mark {
-  double time;
+  TimeStamp* time;
   Text* text;
 };
 
@@ -48,7 +49,8 @@ private:
   double _x_scale, _y_scale;
   int _npoints;
   SDL_Rect _frame;
-  
+
+  void calcMarks();
   void calcData();
   double scaleX(int i);
   double scaleY(double y);
