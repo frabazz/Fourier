@@ -9,14 +9,15 @@
 
 #include "Plotter.hpp"
 #include "colors.hpp"
+#include "../utils/TimeStamp.hpp"
 
 #define AXIS_WIDTH 2
 #define CROSS_SIZE 10
 #define WTOP_RATIO 0.8  // renderArea width to number of points ratio
 #define HTOF_RATIO 0.85 // renderArea height to frame heigth ratio
-#define NMARKS 6        // number of marks
+#define NMARKS 10       // number of marks
 #define MARK_DIGITS 4
-#define MARK_FONT_SIZE 15
+#define MARK_FONT_SIZE 14
 
 
 std::string toLimitedString(float value) {
@@ -50,8 +51,8 @@ Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
          ((float)t.getRenderArea().h) / 2;
 
   for (int i = 0; i < NMARKS; ++i) {
-    posx = AXIS_WIDTH * 2 + _renderArea.x + i * _renderArea.w / NMARKS;
-    Text *t = new Text({posx, posy}, "0.5", MARK_FONT_SIZE, Color::BLUE);
+    posx = AXIS_WIDTH * 2 + _renderArea.x + i * _renderArea.w / NMARKS - 1000;
+    Text *t = new Text({posx, posy}, "0.5", MARK_FONT_SIZE, Color::WHITE);
     _marks[i] = {0, t};
   }
 }
@@ -93,13 +94,58 @@ void Plotter::calcData() {
     curr_sample += delta;
   }
 
-  _data_coordinates[_npoints - 1].first = _frame.w - 2 * AXIS_WIDTH;
+  _data_coordinates[_npoints - 1].first = _frame.w - 2*AXIS_WIDTH;
+  std::vector<TimeStamp*> t = std::vector<TimeStamp*>(NMARKS);
+  int sampleRate = 44100; //TODO: get actual sample rate
+  t[0] = new TimeStamp((double)_data[0].first / (double)sampleRate);
+  t[NMARKS - 1] = new TimeStamp((double)_data[_npoints - 1].first / (double)sampleRate);
+  TimeStamp::string_format format = t[NMARKS-1]->getDefaultFormat();
+  double diff = (t[NMARKS-1]->toSeconds() - t[0]->toSeconds()) * 1000;
+  int gap = 0; double n = 1;
+  for(auto it = mark_gaps.end() - 1; it >= mark_gaps.begin(); --it){
+    n = diff / *it;
+    if(n > NMARKS){
+      gap = *it;
+      break;
+    }
+  }
 
-  /*std::printf("renderArea: {%d %d %d %d}\n", _renderArea.x, _renderArea.y, _renderArea.w, _renderArea.h);
-  std::printf("frame: {%d %d %d %d}\n", _frame.x, _frame.y, _frame.w  , _frame.h);
-  for(auto coord : _data_coordinates){
-    std::printf("coord: {%f, %f}\n", coord.first, coord.second);
-    }*/
+  if(n == 0){
+    std::cout << "Plotter render error, no gaps found" << std::endl;
+    return;
+  }
+
+  double mark_delta = (double)n / (double)(NMARKS - 2);
+  std::cout << "n: " << n << std::endl;
+  std::cout << "chosen delta: " << mark_delta << std::endl;
+  //no * (gap+1) because of the 0 edge case
+  int start_t = (((int)(t[0]->toSeconds() * 1000) / gap) * gap) + gap;
+  int end_t = (((int)(t[NMARKS-1]->toSeconds() * 1000) / gap) * gap);
+  int curr_t = start_t;
+  double j = 0;
+
+  
+  for(int i = 1; i < NMARKS - 1; ++i){
+    t[i] = new TimeStamp((double)curr_t / 1000.0);
+    j += mark_delta;
+    curr_t = (int)j * gap; 
+  }
+
+  for(auto time : t){
+    std::printf("%s(%f)", time->toString().c_str(), time->toSeconds());
+  }
+  std::cout << std::endl;
+  
+  for(int i = 0;i < NMARKS; ++i){
+    double p = (t[i]->toSeconds() - t[0]->toSeconds()) / (t[NMARKS-1]->toSeconds() - t[0]->toSeconds());
+    std::cout << p << " ";
+    _marks[i].text->setText(t[i]->toString(format));
+    _marks[i].text->_renderArea.x =_frame.x + p * (double)(_frame.w) - (double)_marks[i].text->_renderArea.w /2.0;
+    
+  }
+  std::cout << std::endl;
+  
+  std::cout << std::endl;
   _model->wav->seekStart(); // leave it as we got it!
 
   _min_y = -1.25;

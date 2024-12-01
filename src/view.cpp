@@ -27,11 +27,11 @@ View::View(Model *model) {
   Component::_renderer = renderer; 
   Text::font_cache = new std::map<int, TTF_Font*>();
   
-  //SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   components = std::vector<Component*>();
   SDL_Rect renderArea = {0, 0, 50, 50};
   //Box* b = new Box(renderArea, green, blue);
-  Plotter* plotter = new Plotter({100, 100, 500, 200}, {0, model->wav->sampleSize/4});
+  Plotter* plotter = new Plotter({100, 100, 500, 200}, {0, model->wav->sampleSize/2});
   Text* text = new Text(renderArea, "Test", 40, Color::BLUE);
   Text* text2 = new Text(renderArea, "Io sono PDOR, figlio di KMER", 40, Color::BLUE);
   components = {text2, plotter};

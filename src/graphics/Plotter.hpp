@@ -15,6 +15,24 @@ struct mark {
 
 class Plotter : public Component {
 public:
+  const std::vector<int> mark_gaps = {
+    1,
+    5,
+    10,
+    25,
+    50,
+    100,
+    250,
+    500,
+    1000, // 1 second
+    2500,
+    5000,
+    10000,
+    15000,
+    30000, // 30 second
+    60000 // 1 minute
+  };
+  
   Plotter(SDL_Rect renderArea, dpair range);
   void updateRange(dpair *new_range);
   void feedEvent(SDL_Event *e) override;

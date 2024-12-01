@@ -14,7 +14,7 @@
 
 class Component : public IListener<SDL_Event *> {
 public:
-  
+  SDL_Rect _renderArea;
   static Model* _model;
   static SDL_Renderer *_renderer;
 
@@ -27,7 +27,6 @@ private:
   void update(SDL_Event* ev) override;
 protected:
   SDL_Color _draw_color;
-  SDL_Rect _renderArea;
   TTF_Font *_default_font;
 
   // rendering primitives

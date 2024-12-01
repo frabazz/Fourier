@@ -3,10 +3,9 @@
 #include "model.hpp"
 #include "view.hpp"
 #include "audio/wave.hpp"
-#include "utils/conversions.hpp"
+#include "utils/TimeStamp.hpp"
 
 int main(int argc, char *argv[]) {
-  
   if(argc < 2){
     std::cout << "No wav file argument provided" << std::endl;
     return -1;
