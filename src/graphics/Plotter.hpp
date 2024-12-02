@@ -8,6 +8,7 @@
 #include "Component.hpp"
 #include "Text.hpp"
 #include "../utils/TimeStamp.hpp"
+#include "./Timer.hpp"
 
 struct mark {
   TimeStamp* time;
@@ -40,6 +41,7 @@ public:
   ~Plotter();
   
 private:
+  MyTimer::Timer _reloadTimer;
   bool _first_render;
   dpair _range;
   std::vector<dpair> _data;
@@ -49,13 +51,13 @@ private:
   double _x_scale, _y_scale;
   int _npoints;
   SDL_Rect _frame;
-
+  int _gap;
   void calcMarks();
   void calcData();
   double scaleX(int i);
   double scaleY(double y);
   void componentRender() override;
-  void zoom(double ratio);
+  void zoom(int ratio);
   void shift(double ratio);
 };
 

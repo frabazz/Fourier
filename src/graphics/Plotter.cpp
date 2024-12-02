@@ -15,9 +15,10 @@
 #define CROSS_SIZE 10
 #define WTOP_RATIO 0.8  // renderArea width to number of points ratio
 #define HTOF_RATIO 0.85 // renderArea height to frame heigth ratio
-#define NMARKS 6        // number of marks
+#define NMARKS 5        // number of marks
 #define MARK_DIGITS 4
-#define MARK_FONT_SIZE 14
+#define MARK_FONT_SIZE 13
+#define RELOAD_TIME 1000 // ms
 
 std::string toLimitedString(float value) {
   std::ostringstream oss;
@@ -34,7 +35,7 @@ Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
   _range = range;
   _max_y = 1.1;
   _min_y = -1.1;
-
+  _reloadTimer = MyTimer::Timer();
   int frame_height = _renderArea.h * HTOF_RATIO;
   _npoints = renderArea.w * WTOP_RATIO;
   _frame = {_renderArea.x, _renderArea.y, _renderArea.w, frame_height};
@@ -43,11 +44,10 @@ Plotter::Plotter(SDL_Rect renderArea, dpair range) : Component(renderArea) {
   _marks = std::vector<mark>(NMARKS);
   _x_scale = std::abs(_range.second - _range.first);
   _y_scale = std::abs(_max_y - _min_y);
-
+  _gap = mark_gaps[0];
   Text t = Text({0, 0}, "42", MARK_FONT_SIZE, {0, 0, 0});
   int posy = _renderArea.y + _frame.h + (_renderArea.h * (1 - HTOF_RATIO) / 2) -
              ((float)t.getRenderArea().h) / 2;
-
   for (int i = 0; i < NMARKS; ++i) {
     _marks[i] = {new TimeStamp(0.0),
                  new Text({0, posy}, "42", MARK_FONT_SIZE, Color::WHITE)};
@@ -109,12 +109,11 @@ void Plotter::calcMarks() {
   double diff =
       (_marks[NMARKS - 1].time->toSeconds() - _marks[0].time->toSeconds()) *
       1000;
-  int gap = 0;
   double n = 1;
   for (auto it = mark_gaps.end() - 1; it >= mark_gaps.begin(); --it) {
     n = diff / *it;
     if (n > NMARKS - 2) {
-      gap = *it;
+      _gap = *it;
       break;
     }
   }
@@ -124,6 +123,17 @@ void Plotter::calcMarks() {
     return;
   }
 
+  // 5 % 3 = 2
+  double delta = (diff / 1000.0) / NMARKS;
+  double curr_t = _marks[0].time->toSeconds()+  delta;
+  for(int i = 1; i < NMARKS - 1; ++i){
+    int ms = (int)(curr_t * 1000);
+    ms= ms - ms%_gap + _gap;
+    _marks[i].time->fromSeconds((double)ms / 1000.0);
+    curr_t += delta;
+  }
+  
+  /*
   double delta = (double)n / (double)(NMARKS - 2);
   // no * (gap+1) because of the 0 edge case
   int start_t = (((int)(_marks[0].time->toSeconds() * 1000) / gap) * gap) + gap;
@@ -135,16 +145,11 @@ void Plotter::calcMarks() {
   for (int i = 1; i < NMARKS - 1; ++i) {
     _marks[i].time->fromSeconds((double)curr_t / 1000.0);
     j += delta;
-    /*
-      sometimes curr_t == old(curr_t) and some marks could be in the same
-      position and be rendered as one. Its not a problem and the graphic result
-      is better (it's not a bug, it's a feature!)
-     */
+    
     curr_t = std::round(j) * gap;
   }
-
+*/
   for (int i = 0; i < NMARKS; ++i) {
-    std::cout << _marks[i].time->toString(format) << " ";
     double p =
         (_marks[i].time->toSeconds() - _marks[0].time->toSeconds()) /
         (_marks[NMARKS - 1].time->toSeconds() - _marks[0].time->toSeconds());
@@ -157,27 +162,33 @@ void Plotter::calcMarks() {
     _marks[i].text->_renderArea.x = _frame.x + p * (double)(_frame.w) -
                                     (double)_marks[i].text->_renderArea.w / 2.0;
   }
-  std::cout << std::endl;
 }
 
+
+void Plotter::zoom(int ratio) {
+
+  /*if (_range.second - _range.first - 2 * adj_ratio <=
+      _renderArea.w * WTOP_RATIO)
+      return;*/
+  int i;
+  for(i = 0;i < mark_gaps.size(); i++)
+    if(mark_gaps[i] == _gap)
+      break;
+  int gap = i == 0 ? _gap : mark_gaps[i-1];
+  //TODO: get actual sample rate
+  int sample_rate = 44100;
+  int first = (_marks[1].time->toSeconds() + ratio*gap/1000.0) * sample_rate;
+  int last = (_marks[NMARKS - 2].time->toSeconds() -ratio*gap/1000.0) * sample_rate;
+
+
+  _range = {first, last};
+  std::printf("new range: {%f, %f}\n", _range.first, _range.second);
+  calcData();
+
+
+
+}
 /*
-void Plotter::zoom(double ratio) {
-
-  double adj_ratio = (_range->second - _range->first) * ratio;
-
-  if (_range->second - _range->first - 2 * adj_ratio <=
-      _renderArea->w * WTOP_RATIO)
-    return;
-
-  _data.clear();
-
-  *_range = {_range->first + adj_ratio, _range->second - adj_ratio};
-  sendRecalcEvent();
-
-  _x_scale = std::abs(_range->second - _range->first);
-  _y_scale = std::abs(_max_y - _min_y);
-}
-
 void Plotter::shift(double ratio) {
 
   _data.clear();
@@ -241,7 +252,22 @@ void Plotter::componentRender() {
     m.text->render();
 }
 
-void Plotter::feedEvent(SDL_Event *e) {}
+void Plotter::feedEvent(SDL_Event *e) {
+  if(e->type == SDL_KEYDOWN){
+    if(_reloadTimer.measure() >= RELOAD_TIME){
+      switch(e->key.keysym.sym){
+      case SDLK_PLUS:
+	zoom(1);
+	break;
+      case SDLK_MINUS:
+	zoom(-1);
+	break;
+      }
+      
+      _reloadTimer.restart();
+    }
+  }
+}
 
 Plotter::~Plotter() {
   for (auto m : _marks)
