@@ -1,27 +1,24 @@
-#include <iostream>
-#include "controller.hpp"
-#include "model.hpp"
-#include "view.hpp"
-#include "audio/wave.hpp"
-#include "utils/TimeStamp.hpp"
+#include "benchmarks/membuff.hpp"
+#include <fstream>
+#include "benchmarks/algo.hpp"
 
-int main(int argc, char *argv[]) {
-  if(argc < 2){
-    std::cout << "No wav file argument provided" << std::endl;
-    return -1;
-  }
+#define filename "output.txt"
 
-  Wave::WaveFile wav = Wave::WaveFile(argv[1]);
-  if(!wav.open()){
-    std::cout << "error opening wav file" << std::endl;
-    return -1;
-  }
+int main(int argc, char* argv[]) {
+  std::fstream input =
+    std::fstream("input.bin", std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
 
-  wav.printInfo();
+  std::fstream output =
+    std::fstream("output.bin", std::ios::binary | std::ios::in | std::ios::out | std::ios::trunc);
+
+  auto inbuff = Membuff<double>(input);
+  auto outbuff = Membuff<std::complex<double>>(output);
+
+  for(int i = 0; i < 8; ++i)
+    inbuff.set(i, i);
   
-  Model m = Model(&wav);
-  View v = View(&m);
-  Controller c = Controller(&v, &m);
-  c.run();
+  Algo::FFT(inbuff, outbuff, 8);
+  for (int i = 0; i < 8; ++i)
+    std::cout << outbuff.get(i) << " ";
   return 0;
 }
