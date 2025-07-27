@@ -16,7 +16,7 @@ public:
   }
 
   void set(int index, T val) {
-    file.seekg(index * sizeof(T));
+    file.seekp(index * sizeof(T));
     file.write((const char*)&val, sizeof(T));
   }
 
