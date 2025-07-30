@@ -1,14 +1,15 @@
 #pragma once
 
+#include "membuff.hpp"
 #include <bits/stdc++.h>
 #include <fstream>
 
 template<typename T>
-class Membuff {
+class FStreambuff : public Membuff<T> {
 public:
-  Membuff(std::fstream &file) : file(file) {}
+  FStreambuff(std::fstream &file) : file(file) {}
 
-  T get(int index) {
+  T& get(int index) {
     file.seekg(index * sizeof(T));
     T ris;
     file.read((char *)&ris, sizeof(T));

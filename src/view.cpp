@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 #include <iostream>
-#include "Plotter.hpp"
+#include "graphics/Plotter.hpp"
 #include "graphics/Box.hpp"
 #include "graphics/Text.hpp"
 #include "graphics/colors.hpp"

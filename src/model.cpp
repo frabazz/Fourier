@@ -1,5 +1,5 @@
 #include "model.hpp"
-#include "wave.hpp"
+#include "audio/wave.hpp"
 
 using namespace Wave;
 

@@ -1,8 +1,7 @@
 #include "PlotterWorker.hpp"
-#include "wave.hpp"
+#include "../audio/wave.hpp"
 
 #include <iostream>
-
 
 SampleReadWorker::SampleReadWorker(Wave::WaveFile* file) : PlotterWorker(){
     _wav_file = file;
