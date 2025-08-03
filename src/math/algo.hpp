@@ -5,6 +5,8 @@
 #include <immintrin.h>
 #include <omp.h>
 
+using namespace MemUtils;
+
 class Algo {
 public:
   static void DFT(MmapBuff<double> &in, MmapBuff<std::complex<double>> &out,
@@ -83,7 +85,7 @@ public:
       int half_len = len >> 1;
       std::complex<double> w_len = std::polar(1.0, -2 * M_PI / len);
       std::complex<double> w;
-#pragma omp parallel for private(w)
+      #pragma omp parallel for private(w)
       for (int i = 0; i < size; i += len) {
         w = 1;
 

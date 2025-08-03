@@ -23,12 +23,13 @@ target_include_directories(exec PRIVATE
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(exec PRIVATE
-        -O3
-        -mavx2
-        -mfma
+#        -O3
+#        -mavx2
+#        -mfma
         -fopenmp
-        -march=native
-        -ftree-vectorize
+        -g
+#        -march=native
+#        -ftree-vectorize
     )
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(exec PRIVATE

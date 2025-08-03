@@ -21,6 +21,8 @@ public:
     file.write((const char*)&val, sizeof(T));
   }
 
+  
+
 private:
   std::fstream &file;
 };
