@@ -26,8 +26,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 #        -O3
 #        -mavx2
 #        -mfma
-        -fopenmp
-        -g
+         -fopenmp
+         -g
 #        -march=native
 #        -ftree-vectorize
     )

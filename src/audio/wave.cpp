@@ -86,15 +86,20 @@ int WaveFile::open() {
 void WaveFile::open(std::string name, int sampleSize) {
   max_sample = MAX_SAMPLE_16;
   uint16_t bitsPerSample = 16;
+  this->sampleSize = sampleSize;
   //  = size(RIFF) + size(FMT) + size(DATA)
-  size_t file_size = (12) + (24) + (4 + (bitsPerSample / 8) * sampleSize);
+  size_t file_size = (12) + (24) + (8 + (bitsPerSample / 8) * sampleSize);
   std::cout << "allocating " << file_size << " bytes" << std::endl;
   auto rawBuff = MemUtils::RawBuff(name.c_str(), file_size);
   uint32_t riffChunkSize = file_size - 8;
   riffChunk.writeChunk(&rawBuff, riffChunkSize);
 
+  uint32_t sampleRate = 48000;
   uint32_t fmtChunkSize = 16; // must be 16, 18 or 40
-  SubChunk1Data s1data = {fmtChunkSize, 1, 1, 44100, 88200, 2, bitsPerSample};
+  uint16_t numChannels = 1;
+  uint32_t byteRate = sampleRate * numChannels * bitsPerSample / 8;
+  uint16_t blockAlign = numChannels * (bitsPerSample/8);
+  SubChunk1Data s1data = {fmtChunkSize, 1, numChannels, sampleRate, byteRate, blockAlign, bitsPerSample};
   
 
   subChunk1.writeChunk(&rawBuff, &s1data);
@@ -114,6 +119,7 @@ double WaveFile::getSample(int index) {
 void WaveFile::setSample(int index, double sample) {
   std::visit([this, index, sample](auto &&wave) {
     int denormalized = sample * this->max_sample;
+    //  std::cout << "denormalized: " << denormalized << std::endl;
     wave.set(index, denormalized);
   }, wave_file);
 }
@@ -126,6 +132,10 @@ void WaveFile::printInfo() {
 
   cout << "[GENERAL INFO]" << endl;
   cout << "no of samples: " << sampleSize << endl;
+
+  int duration = (sampleSize) / subChunk1.sampleRate;
+
+  cout << "duration: " << duration << "s" << endl;
 }
 
 

@@ -1,11 +1,11 @@
-#ifndef WAVE_FILE_H
-#define WAVE_FILE_H
+#pragma once
 
 #include <fstream>
 #include <string>
 #include <variant>
 #include <vector>
 
+#include "audioFX.hpp"
 #include "mmapBuff.hpp"
 #include "chunks.hpp"
 
@@ -18,6 +18,7 @@ namespace Wave {
 
 class WaveFile {
 
+  friend class ::AudioFX;
 private:
   std::variant < MemUtils::MmapBuff<int8_t>, MemUtils::MmapBuff<int16_t>,
                  MemUtils::MmapBuff<int32_t>> wave_file;
@@ -49,4 +50,4 @@ public:
 };
 } // namespace Wave
 
-#endif
+
